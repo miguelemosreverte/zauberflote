@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>6.5.7 Dependent Sub-entities</title>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import ui from "/ui.js";
+
+    ui.app("6.5.7 Dependent Sub-entities")
+      .blurb("Project completes only when all tasks are done.")
+      .section("Projects")
+        .action("Add project")
+          .post("/projects")
+          .fields({ name: "Launch" })
+          .refreshAll()
+          .end()
+        .end()
+      .section("Project list")
+        .read("/projects")
+        .list("{{id}} {{name}} [{{status}}]")
+        .rowAction("Complete")
+          .post("/projects/{{id}}/complete")
+          .end()
+        .end()
+      .section("Tasks")
+        .action("Add task")
+          .fields({ project_id: { type: "number", value: 1 }, name: "Ship docs" })
+          .custom(async ({ body, request, output, setFooter }) => {
+            const res = await request(`/projects/${body.project_id}/tasks`, {
+              method: "POST",
+              body: { name: body.name }
+            });
+            output.textContent = res.raw || "-";
+            setFooter(res);
+          })
+          .refreshAll()
+          .end()
+        .end()
+      .section("Task list")
+        .read("/tasks")
+        .list("{{id}} project={{project_id}} {{name}} done={{done}}")
+        .rowAction("Complete")
+          .post("/tasks/{{id}}/complete")
+          .end()
+        .end()
+      .mount();
+  </script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Image Grayscale Processor</title>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import ui from "/ui.js";
+
+    ui.app("Image Processor")
+      .blurb("Upload an image to convert it to grayscale on the server.")
+      .section("Upload & Process")
+        .action("Process to Grayscale")
+          .upload("/process")
+          .field("file", null, "file")
+          .store({ preview: "data.preview", note: "data.note" })
+          .end()
+        .end()
+      .section("Result Preview")
+        .customView(({ store }) => {
+          if (!store.preview) return "<p class='text-slate-400'>Upload an image to see results...</p>";
+          return `
+            <div class="space-y-2">
+              <img src="${store.preview}" class="max-w-full rounded shadow-lg" />
+              ${store.note ? `<p class='text-amber-600 text-xs'>${store.note}</p>` : ''}
+            </div>
+          `;
+        })
+        .end()
+      .mount();
+  </script>
+</body>
+</html>

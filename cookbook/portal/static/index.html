@@ -1,0 +1,611 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Working Examples Portal</title>
+    <style>
+      :root {
+        --bg: #f4f1ea;
+        --panel: #fffaf2;
+        --ink: #1f1b16;
+        --muted: #6b6257;
+        --accent: #2e6f6a;
+        --accent-soft: #e3f1ef;
+        --border: #e1d8cc;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: "IBM Plex Serif", "Georgia", serif;
+        color: var(--ink);
+        background: var(--bg);
+        overflow: hidden;
+      }
+      header {
+        padding: 18px 24px;
+        border-bottom: 1px solid var(--border);
+        background: linear-gradient(90deg, #fff5e6, #e7f4f1);
+      }
+      header h1 { margin: 0; font-size: 20px; letter-spacing: 0.5px; }
+      .layout {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        height: calc(100vh - 58px);
+      }
+      aside {
+        border-right: 1px solid var(--border);
+        padding: 18px 16px 120px 16px;
+        overflow-y: auto;
+        background: var(--panel);
+      }
+      main {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        min-height: 0;
+      }
+      .chapter {
+        margin-bottom: 18px;
+      }
+      .chapter-title {
+        font-weight: 600;
+        color: var(--accent);
+        margin: 10px 0;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+      .entry {
+        padding: 8px 10px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        color: var(--ink);
+      }
+      .entry:hover { background: var(--accent-soft); }
+      .entry.active {
+        background: var(--accent);
+        color: white;
+      }
+      .docs-section {
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 2px solid var(--border);
+      }
+      .docs-title {
+        font-weight: 600;
+        color: #8b5a2b;
+        margin: 0 0 10px 0;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+      .doc-entry {
+        padding: 8px 10px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        color: var(--ink);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .doc-entry:hover { background: #fff3e0; }
+      .doc-entry.active {
+        background: #8b5a2b;
+        color: white;
+      }
+      .doc-icon {
+        font-size: 16px;
+      }
+      .viewer-header {
+        padding: 12px 18px;
+        border-bottom: 1px solid var(--border);
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .viewer-title {
+        font-size: 16px;
+        font-weight: 600;
+      }
+      .viewer-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .viewer-desc {
+        font-size: 13px;
+        color: var(--muted);
+        max-width: 620px;
+      }
+      .viewer-actions {
+        display: flex;
+        gap: 8px;
+      }
+      .viewer-footer {
+        border-top: 1px solid var(--border);
+        padding: 10px 18px;
+        background: #fff;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+      .viewer-footer span {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .tag {
+        padding: 4px 8px;
+        border-radius: 999px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        font-size: 11px;
+        border: 1px solid var(--border);
+      }
+      .tag-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .filter {
+        width: 100%;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 6px 8px;
+        margin-bottom: 12px;
+        font-size: 13px;
+        background: #fff;
+      }
+      .btn {
+        border: 1px solid var(--border);
+        background: white;
+        padding: 6px 10px;
+        border-radius: 8px;
+        font-size: 12px;
+        cursor: pointer;
+      }
+      .btn:hover { background: var(--accent-soft); }
+      .iframe-wrap {
+        flex: 1;
+        background: white;
+        min-height: 0;
+      }
+      iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+        background: white;
+      }
+      .modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(10, 10, 10, 0.45);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        z-index: 50;
+      }
+      .modal.open { display: flex; }
+      .modal-card {
+        background: #fbf9f4;
+        color: var(--ink);
+        max-width: 900px;
+        width: 100%;
+        max-height: 90vh;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+      .modal-card header {
+        background: #fffaf2;
+        color: var(--ink);
+        border-bottom: 1px solid var(--border);
+      }
+      .modal-card pre {
+        margin: 0;
+        padding: 18px;
+        overflow: auto;
+        font-size: 12px;
+        line-height: 1.6;
+        white-space: pre;
+        background: #f6f2ea;
+      }
+      .modal-card code {
+        font-family: "JetBrains Mono", "SFMono-Regular", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      }
+      .modal-close {
+        border: 1px solid var(--border);
+        background: white;
+        color: var(--ink);
+        padding: 6px 10px;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+      @media (max-width: 960px) {
+        .layout { grid-template-columns: 1fr; }
+        iframe { height: 70vh; }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Working Examples Portal</h1>
+    </header>
+    <div class="layout">
+      <aside id="nav">
+        <div id="docsSection" class="docs-section">
+          <div class="docs-title">Reference Docs</div>
+          <div id="docsEntries"></div>
+        </div>
+        <input id="filter" class="filter" placeholder="Filter by title or tags (e.g. auth/jwt)" />
+        <div id="navEntries"></div>
+      </aside>
+      <main>
+        <div class="viewer-header">
+          <div class="viewer-meta">
+            <div class="viewer-title" id="viewerTitle">Select an example</div>
+            <div class="viewer-desc" id="viewerDesc">Pick an example to see its live app and source.</div>
+          </div>
+          <div class="viewer-actions">
+            <button class="btn" id="openHtml">View HTML</button>
+            <button class="btn" id="openElixir">View Elixir</button>
+            <button class="btn" id="openNew">Open in new tab</button>
+          </div>
+        </div>
+        <div class="iframe-wrap">
+          <iframe id="viewer" src="about:blank"></iframe>
+        </div>
+        <div class="viewer-footer">
+          <span id="viewerFooterDesc">No description available.</span>
+          <div class="tag-group" id="viewerTags"></div>
+        </div>
+      </main>
+    </div>
+
+    <div class="modal" id="modal">
+      <div class="modal-card">
+        <header>
+          <h1 id="modalTitle">Source</h1>
+        </header>
+        <pre><code id="modalBody" class="language-text"></code></pre>
+        <div style="padding:12px; text-align:right; background:#fffaf2; border-top:1px solid var(--border);">
+          <button class="modal-close" id="modalClose">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/elixir.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js"></script>
+    <script>
+      const nav = document.getElementById('navEntries');
+      const docsEntries = document.getElementById('docsEntries');
+      const viewer = document.getElementById('viewer');
+      const viewerTitle = document.getElementById('viewerTitle');
+      const viewerDesc = document.getElementById('viewerDesc');
+      const viewerFooterDesc = document.getElementById('viewerFooterDesc');
+      const viewerTags = document.getElementById('viewerTags');
+      const filterInput = document.getElementById('filter');
+      const modal = document.getElementById('modal');
+      const modalTitle = document.getElementById('modalTitle');
+      const modalBody = document.getElementById('modalBody');
+      let activeEntry = null;
+      let indexData = null;
+      let isDocActive = false;
+
+      // Configure marked for syntax highlighting
+      marked.setOptions({
+        highlight: function(code, lang) {
+          if (lang && hljs.getLanguage(lang)) {
+            return hljs.highlight(code, { language: lang }).value;
+          }
+          return hljs.highlightAuto(code).value;
+        }
+      });
+
+      function clearAllActive() {
+        document.querySelectorAll('.entry').forEach((node) => node.classList.remove('active'));
+        document.querySelectorAll('.doc-entry').forEach((node) => node.classList.remove('active'));
+      }
+
+      function setActiveDoc(doc, el) {
+        clearAllActive();
+        if (el) el.classList.add('active');
+        activeEntry = null;
+        isDocActive = true;
+        window.location.hash = `doc:${doc.id}`;
+        viewerTitle.textContent = doc.title;
+        viewerDesc.textContent = 'Reference documentation';
+        viewerFooterDesc.textContent = 'Comprehensive guide with examples';
+        viewerTags.innerHTML = '<div class="tag">documentation</div><div class="tag">reference</div>';
+
+        // Fetch and render markdown
+        fetch(`/api/docs/${doc.id}`)
+          .then(res => res.text())
+          .then(markdown => {
+            const html = marked.parse(markdown);
+            const styledHtml = `
+              <!doctype html>
+              <html>
+              <head>
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css" />
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"><\/script>
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/elixir.min.js"><\/script>
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"><\/script>
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/sql.min.js"><\/script>
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"><\/script>
+                <style>
+                  body {
+                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                    line-height: 1.7;
+                    max-width: 920px;
+                    margin: 0 auto;
+                    padding: 24px 32px;
+                    color: #1f1b16;
+                    background: #fffaf2;
+                  }
+                  h1 { border-bottom: 3px solid #2e6f6a; padding-bottom: 12px; color: #2e6f6a; font-size: 28px; }
+                  h2 { border-bottom: 2px solid #e1d8cc; padding-bottom: 8px; margin-top: 40px; color: #2e6f6a; font-size: 22px; }
+                  h3 { color: #8b5a2b; margin-top: 28px; font-size: 18px; }
+                  h4 { color: #5a4a3a; margin-top: 20px; font-size: 16px; }
+                  code:not(pre code) {
+                    background: #fef3e2;
+                    padding: 2px 7px;
+                    border-radius: 4px;
+                    font-size: 13px;
+                    font-family: "JetBrains Mono", "Fira Code", Monaco, monospace;
+                    color: #c45d1a;
+                    border: 1px solid #f0d9b5;
+                  }
+                  pre {
+                    background: #282c34;
+                    padding: 18px;
+                    border-radius: 10px;
+                    overflow-x: auto;
+                    border: 1px solid #1a1d23;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                    margin: 16px 0;
+                  }
+                  pre code {
+                    background: none;
+                    padding: 0;
+                    color: #abb2bf;
+                    font-family: "JetBrains Mono", "Fira Code", Monaco, monospace;
+                    font-size: 13px;
+                    line-height: 1.5;
+                    border: none;
+                  }
+                  table { border-collapse: collapse; width: 100%; margin: 20px 0; }
+                  th, td { border: 1px solid #e1d8cc; padding: 10px 14px; text-align: left; }
+                  th { background: #f0ebe3; font-weight: 600; color: #2e6f6a; }
+                  tr:nth-child(even) { background: #faf7f2; }
+                  blockquote { border-left: 4px solid #2e6f6a; margin: 16px 0; padding-left: 16px; color: #6b6257; background: #f9f6f0; padding: 12px 16px; border-radius: 0 8px 8px 0; }
+                  a { color: #2e6f6a; text-decoration: none; border-bottom: 1px dashed #2e6f6a; }
+                  a:hover { color: #1a4a46; border-bottom-style: solid; }
+                  a[href^="#chapter:"] {
+                    display: inline-block;
+                    background: linear-gradient(135deg, #e8f5f3 0%, #d4ede9 100%);
+                    color: #1a5f5a;
+                    padding: 4px 10px;
+                    border-radius: 6px;
+                    font-size: 12px;
+                    font-weight: 500;
+                    border: 1px solid #b8d9d4;
+                    margin: 2px 4px 2px 0;
+                    cursor: pointer;
+                    transition: all 0.15s ease;
+                  }
+                  a[href^="#chapter:"]:hover {
+                    background: linear-gradient(135deg, #2e6f6a 0%, #1a5f5a 100%);
+                    color: white;
+                    border-color: #1a5f5a;
+                    transform: translateY(-1px);
+                    box-shadow: 0 2px 6px rgba(46, 111, 106, 0.3);
+                  }
+                  a[href^="#chapter:"]:before {
+                    content: "📖 ";
+                  }
+                  hr { border: none; border-top: 2px solid #e1d8cc; margin: 40px 0; }
+                  ul, ol { padding-left: 24px; }
+                  li { margin: 6px 0; }
+                  strong { color: #1a1a1a; }
+                  /* Syntax highlighting overrides */
+                  .hljs-keyword { color: #c678dd; }
+                  .hljs-string { color: #98c379; }
+                  .hljs-number { color: #d19a66; }
+                  .hljs-function { color: #61afef; }
+                  .hljs-comment { color: #5c6370; font-style: italic; }
+                  .hljs-built_in { color: #e5c07b; }
+                  .hljs-attr { color: #d19a66; }
+                  .hljs-title { color: #61afef; }
+                </style>
+              </head>
+              <body>
+                ${html}
+                <script>
+                  document.querySelectorAll('pre code').forEach((block) => {
+                    hljs.highlightElement(block);
+                  });
+                  // Handle chapter links
+                  document.querySelectorAll('a[href^="#chapter:"]').forEach(link => {
+                    link.addEventListener('click', (e) => {
+                      e.preventDefault();
+                      const chapterId = link.getAttribute('href').replace('#chapter:', '');
+                      window.parent.postMessage({ type: 'navigate-chapter', chapter: chapterId }, '*');
+                    });
+                  });
+                <\/script>
+              </body>
+              </html>
+            `;
+            viewer.srcdoc = styledHtml;
+          });
+      }
+
+      function setActive(entry, el) {
+        clearAllActive();
+        if (el) el.classList.add('active');
+        activeEntry = entry;
+        isDocActive = false;
+        window.location.hash = entry.title;
+        viewer.removeAttribute('srcdoc');
+        viewer.src = entry.url || 'about:blank';
+        viewerTitle.textContent = entry.title || 'Example';
+        const desc = entry.description || 'No description available.';
+        viewerDesc.textContent = desc;
+        viewerFooterDesc.textContent = desc;
+        viewerTags.innerHTML = '';
+        (entry.tags || []).forEach((tag) => {
+          const chip = document.createElement('div');
+          chip.className = 'tag';
+          chip.textContent = tag;
+          viewerTags.appendChild(chip);
+        });
+      }
+
+      // Load reference docs
+      fetch('/api/docs')
+        .then(res => res.json())
+        .then(data => {
+          const hash = decodeURIComponent(window.location.hash.slice(1));
+          let hashDocMatch = null;
+
+          data.docs.forEach(doc => {
+            const item = document.createElement('div');
+            item.className = 'doc-entry';
+            item.innerHTML = `<span class="doc-icon">${doc.id === 'ui' ? '🎨' : '⚙️'}</span> ${doc.title}`;
+            item.addEventListener('click', () => setActiveDoc(doc, item));
+            docsEntries.appendChild(item);
+
+            if (hash === `doc:${doc.id}`) {
+              hashDocMatch = { doc, item };
+            }
+          });
+
+          // Restore doc from hash if present
+          if (hashDocMatch) {
+            setActiveDoc(hashDocMatch.doc, hashDocMatch.item);
+          }
+        });
+
+      // Listen for chapter navigation from docs iframe
+      window.addEventListener('message', (event) => {
+        if (event.data && event.data.type === 'navigate-chapter') {
+          const chapterId = event.data.chapter;
+          // Find and click the matching entry
+          const entries = document.querySelectorAll('.entry');
+          for (const entry of entries) {
+            if (entry.textContent.includes(chapterId)) {
+              entry.click();
+              entry.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              break;
+            }
+          }
+        }
+      });
+
+      function openSource(kind) {
+        if (!activeEntry) return;
+        const path = kind === 'html' ? activeEntry.html_path : activeEntry.elixir_path;
+        if (!path) {
+          modalTitle.textContent = 'Source';
+          modalBody.textContent = 'No source available.';
+          modalBody.className = 'language-text';
+          modal.classList.add('open');
+          return;
+        }
+        fetch(`/api/file?path=${encodeURIComponent(path)}`)
+          .then((res) => res.text())
+          .then((text) => {
+            modalTitle.textContent = kind === 'html' ? 'HTML Source' : 'Elixir Source';
+            modalBody.textContent = text;
+            modalBody.className = kind === 'html' ? 'language-html' : 'language-elixir';
+            if (modalBody.dataset) {
+              delete modalBody.dataset.highlighted;
+            }
+            if (window.hljs) {
+              window.hljs.highlightElement(modalBody);
+            }
+            modal.classList.add('open');
+          });
+      }
+
+      document.getElementById('openHtml').addEventListener('click', () => openSource('html'));
+      document.getElementById('openElixir').addEventListener('click', () => openSource('elixir'));
+      document.getElementById('openNew').addEventListener('click', () => {
+        if (activeEntry && activeEntry.url) window.open(activeEntry.url, '_blank');
+      });
+      document.getElementById('modalClose').addEventListener('click', () => modal.classList.remove('open'));
+      modal.addEventListener('click', (event) => {
+        if (event.target === modal) modal.classList.remove('open');
+      });
+
+      function matchesFilter(entry, query) {
+        if (!query) return true;
+        const needle = query.toLowerCase();
+        const hay = `${entry.title} ${(entry.tags || []).join(' ')}`.toLowerCase();
+        return hay.includes(needle);
+      }
+
+      function renderNav(query, restoreHash = false) {
+        nav.innerHTML = '';
+        let first = null;
+        let hashMatch = null;
+        const hash = decodeURIComponent(window.location.hash.slice(1));
+
+        indexData.chapters.forEach((chapter) => {
+          const visibleEntries = chapter.entries.filter((entry) => matchesFilter(entry, query));
+          if (visibleEntries.length === 0) return;
+          const wrapper = document.createElement('div');
+          wrapper.className = 'chapter';
+          const title = document.createElement('div');
+          title.className = 'chapter-title';
+          title.textContent = chapter.title;
+          wrapper.appendChild(title);
+          visibleEntries.forEach((entry) => {
+            const item = document.createElement('div');
+            item.className = 'entry';
+            item.textContent = entry.title;
+            item.addEventListener('click', () => setActive(entry, item));
+            wrapper.appendChild(item);
+            if (!first) first = { entry, item };
+            if (restoreHash && hash === entry.title) {
+              hashMatch = { entry, item };
+            }
+          });
+          nav.appendChild(wrapper);
+        });
+
+        if (restoreHash && hashMatch) {
+          setActive(hashMatch.entry, hashMatch.item);
+          hashMatch.item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else if (restoreHash && hash.startsWith('doc:')) {
+          // Will be handled after docs load
+        } else if (first && (!hash || !restoreHash)) {
+          setActive(first.entry, first.item);
+        }
+      }
+
+      fetch('/api/index')
+        .then((res) => res.json())
+        .then((data) => {
+          indexData = data;
+          renderNav('', true);
+        });
+
+      filterInput.addEventListener('input', (event) => {
+        if (!indexData) return;
+        renderNav(event.target.value.trim());
+      });
+    </script>
+  </body>
+</html>

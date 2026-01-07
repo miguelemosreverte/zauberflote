@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Theme - Client State</title>
+  <style>
+    .theme-dark { --bg: #1a1a2e; --text: #eee; --card: #16213e; --accent: var(--accent-color, #4f46e5); }
+    .theme-light { --bg: #f8fafc; --text: #1e293b; --card: #ffffff; --accent: var(--accent-color, #4f46e5); }
+    .themed { background: var(--bg); color: var(--text); min-height: 100vh; transition: all 0.3s ease; }
+    .themed-card { background: var(--card); border-color: var(--accent); }
+    .themed-accent { color: var(--accent); }
+    .themed-btn { background: var(--accent); }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import ui from "/ui.js";
+
+    ui.app("10.8 Theme Switcher")
+      .blurb("Dynamic theming with store-driven styles. Changes apply instantly.")
+
+      .section("Theme Settings")
+        .id("settings")
+        .query({ theme: "light", accent: "#4f46e5", fontSize: "base" })
+        .customView(({ store }) => {
+          const accents = [
+            { name: "Indigo", value: "#4f46e5" },
+            { name: "Rose", value: "#e11d48" },
+            { name: "Emerald", value: "#10b981" },
+            { name: "Amber", value: "#f59e0b" },
+            { name: "Cyan", value: "#06b6d4" }
+          ];
+          const sizes = [
+            { name: "Small", value: "sm" },
+            { name: "Base", value: "base" },
+            { name: "Large", value: "lg" },
+            { name: "XL", value: "xl" }
+          ];
+
+          return `
+            <div class="space-y-6">
+              <div>
+                <div class="text-sm font-medium mb-3">Theme Mode</div>
+                <div class="flex gap-2">
+                  <button class="theme-btn flex-1 p-3 rounded border-2 ${store.theme === 'light' ? 'border-slate-900' : 'border-slate-200'}" data-theme="light">
+                    ☀️ Light
+                  </button>
+                  <button class="theme-btn flex-1 p-3 rounded border-2 ${store.theme === 'dark' ? 'border-slate-900' : 'border-slate-200'}" data-theme="dark">
+                    🌙 Dark
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <div class="text-sm font-medium mb-3">Accent Color</div>
+                <div class="flex gap-2">
+                  ${accents.map(a => `
+                    <button class="accent-btn w-10 h-10 rounded-full border-4 ${store.accent === a.value ? 'border-slate-900' : 'border-transparent'}"
+                      style="background: ${a.value}" data-accent="${a.value}" title="${a.name}"></button>
+                  `).join('')}
+                </div>
+              </div>
+
+              <div>
+                <div class="text-sm font-medium mb-3">Font Size</div>
+                <div class="flex gap-2">
+                  ${sizes.map(s => `
+                    <button class="size-btn flex-1 p-2 rounded border-2 text-${s.value} ${store.fontSize === s.value ? 'border-slate-900' : 'border-slate-200'}"
+                      data-size="${s.value}">${s.name}</button>
+                  `).join('')}
+                </div>
+              </div>
+            </div>
+          `;
+        })
+        .onRender(({ store, element }) => {
+          element.querySelectorAll('.theme-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+              store.theme = btn.dataset.theme;
+              window.dispatchEvent(new CustomEvent('ui:refresh:settings'));
+              window.dispatchEvent(new CustomEvent('ui:refresh:preview'));
+            });
+          });
+          element.querySelectorAll('.accent-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+              store.accent = btn.dataset.accent;
+              window.dispatchEvent(new CustomEvent('ui:refresh:settings'));
+              window.dispatchEvent(new CustomEvent('ui:refresh:preview'));
+            });
+          });
+          element.querySelectorAll('.size-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+              store.fontSize = btn.dataset.size;
+              window.dispatchEvent(new CustomEvent('ui:refresh:settings'));
+              window.dispatchEvent(new CustomEvent('ui:refresh:preview'));
+            });
+          });
+        })
+        .end()
+
+      .section("Preview")
+        .id("preview")
+        .query({ theme: "light", accent: "#4f46e5", fontSize: "base" })
+        .customView(({ store }) => `
+          <div class="themed theme-${store.theme} p-6 rounded-lg" style="--accent-color: ${store.accent}">
+            <div class="themed-card p-4 rounded-lg border-2 mb-4">
+              <h3 class="themed-accent font-bold text-${store.fontSize} mb-2">Preview Card</h3>
+              <p class="text-${store.fontSize}">This is how your content will look with the selected theme settings.</p>
+            </div>
+            <div class="flex gap-3">
+              <button class="themed-btn text-white px-4 py-2 rounded text-${store.fontSize}">Primary Button</button>
+              <button class="border-2 px-4 py-2 rounded text-${store.fontSize}" style="border-color: var(--accent); color: var(--accent)">Secondary</button>
+            </div>
+          </div>
+        `)
+        .end()
+
+      .section("Current Settings")
+        .id("current")
+        .query({ theme: "light", accent: "#4f46e5", fontSize: "base" })
+        .kpis([
+          { label: "Theme", compute: (d, store) => store.theme === 'dark' ? '🌙 Dark' : '☀️ Light' },
+          { label: "Accent", compute: (d, store) => store.accent },
+          { label: "Size", compute: (d, store) => (store.fontSize || 'base').toUpperCase() }
+        ])
+        .end()
+
+      .mount();
+  </script>
+</body>
+</html>

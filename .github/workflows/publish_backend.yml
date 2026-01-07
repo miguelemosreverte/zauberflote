@@ -1,0 +1,27 @@
+name: Publish Backend to Hex.pm
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: erlef/setup-beam@v1
+        with:
+          elixir-version: '1.17'
+          otp-version: '26'
+      - name: Install Dependencies
+        run: |
+          cd backend
+          mix deps.get
+      - name: Publish to Hex
+        run: |
+          cd backend
+          mix hex.publish --yes
+        env:
+          HEX_API_KEY: ${{ secrets.HEX_API_KEY }}

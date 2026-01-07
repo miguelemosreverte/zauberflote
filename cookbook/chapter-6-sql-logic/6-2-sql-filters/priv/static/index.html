@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>6.2 Filters + Sorting + Pagination</title>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import ui from "/ui.js";
+
+    ui.app("Filters + Sorting + Pagination")
+      .blurb("Search by name, category, price range, and order.")
+      .section("Filters")
+        .fields({
+          q: { placeholder: "search" },
+          category: { placeholder: "category" },
+          min: { type: "number", placeholder: "min" },
+          max: { type: "number", placeholder: "max" },
+          sort: { type: "select", value: "price", options: ["price", "name"] },
+          order: { type: "select", value: "asc", options: ["asc", "desc"] },
+          limit: { type: "number", value: 10 },
+          offset: { type: "number", value: 0 }
+        })
+        .query({
+          q: "{{q}}",
+          category: "{{category}}",
+          min: "{{min}}",
+          max: "{{max}}",
+          sort: "{{sort}}",
+          order: "{{order}}",
+          limit: "{{limit}}",
+          offset: "{{offset}}"
+        })
+        .action("Load")
+          .get("/products")
+          .store({ results: "data" })
+          .refreshAll()
+          .end()
+        .end()
+      .section("Products")
+        .listFrom("results.items")
+        .list("{{id}} {{name}} {{category}} ${{price}}")
+        .end()
+      .mount();
+  </script>
+</body>
+</html>

@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>4.3 Transactions</title>
+</head>
+<body>
+  <div id="app"></div>
+  <script type="module">
+    import ui from "/ui.js";
+
+    ui.app("4.3 Transactions")
+      .section("Transfers")
+        .action("Transfer 1 -> 2")
+          .post("/transfer")
+          .body({ from: 1, to: 2 })
+          .field("amount", 10, "number")
+          .refreshAll()
+          .end()
+        .action("Transfer 2 -> 1")
+          .post("/transfer")
+          .body({ from: 2, to: 1 })
+          .field("amount", 10, "number")
+          .refreshAll()
+          .end()
+        .end()
+      .section("Accounts")
+        .read("/accounts")
+        .list("account {{id}}: ${{balance}}")
+        .end()
+      .mount();
+  </script>
+</body>
+</html>

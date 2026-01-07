@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Auth API Key</title>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import ui from "/ui.js";
+
+    ui.app("3.2 API Key Auth")
+      .blurb("Use Authorization: Bearer <api-key>. Try: key-123 or key-456.")
+      .section("Call protected route")
+        .action("Call /protected")
+          .get("/protected")
+          .bearer("key")
+          .field("key", "key-123")
+          .end()
+        .end()
+      .mount();
+  </script>
+</body>
+</html>

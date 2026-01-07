@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>6.5.9 Compensation</title>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import ui from "/ui.js";
+
+    ui.app("6.5.9 Compensation / Rollback")
+      .blurb("Refund payment when shipping fails.")
+      .section("Create order")
+        .action("Create")
+          .post("/orders")
+          .fields({ item: "Camera" })
+          .refreshAll()
+          .end()
+        .end()
+      .section("Ship order")
+        .action("Ship")
+          .fields({
+            order_id: { type: "number", value: 1 },
+            fail: { type: "select", value: "false", options: [
+              { value: "false", label: "ship ok" },
+              { value: "true", label: "ship fail" }
+            ] }
+          })
+          .custom(async ({ body, request, output, setFooter }) => {
+            const res = await request(`/orders/${body.order_id}/ship`, {
+              method: "POST",
+              body: { fail: body.fail === "true" }
+            });
+            output.textContent = res.raw || "-";
+            setFooter(res);
+          })
+          .refreshAll()
+          .end()
+        .end()
+      .section("Orders")
+        .read("/orders")
+        .list("{{id}} {{item}} [{{status}}]")
+        .end()
+      .section("Payments")
+        .read("/payments")
+        .list("{{id}} order={{order_id}} [{{status}}]")
+        .end()
+      .mount();
+  </script>
+</body>
+</html>

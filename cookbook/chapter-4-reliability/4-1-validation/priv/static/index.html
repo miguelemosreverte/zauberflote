@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>4.1 Validation</title>
+</head>
+<body>
+  <div id="app"></div>
+  <script type="module">
+    import ui from "/ui.js";
+
+    ui.app("4.1 Validation & Errors")
+      .section("Rules")
+        .markdown(`### Validation rules
+- name is required
+- price must be a number
+- price must be greater than 0`)
+        .end()
+      .section("Create item")
+        .action("Create")
+          .post("/items")
+          .fields({
+            name: { placeholder: "name" },
+            price: { type: "number", value: 10 }
+          })
+          .refreshAll()
+          .end()
+        .end()
+      .section("Items")
+        .read("/items")
+        .list("{{name}} · ${{price}}")
+        .end()
+      .mount();
+  </script>
+</body>
+</html>

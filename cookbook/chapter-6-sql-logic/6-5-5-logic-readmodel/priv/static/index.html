@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>6.5.5 Event-derived Read Model</title>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import ui from "/ui.js";
+
+    ui.app("6.5.5 Event-derived Read Model")
+      .blurb("Events stream builds balances.")
+      .section("Add event")
+        .action("Add event")
+          .post("/events")
+          .fields({ account: "acct-1", delta: { type: "number", value: 25 } })
+          .refreshAll()
+          .end()
+        .action("Refresh")
+          .local()
+          .refreshAll()
+          .end()
+        .end()
+      .section("Events")
+        .read("/events")
+        .list("{{id}} {{account}} delta={{delta}}")
+        .end()
+      .section("Balances")
+        .read("/balances")
+        .list("{{account}} balance={{balance}}")
+        .end()
+      .mount();
+  </script>
+</body>
+</html>

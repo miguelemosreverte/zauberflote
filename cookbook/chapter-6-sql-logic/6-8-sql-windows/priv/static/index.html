@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>6.8 Window Functions</title>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import ui from "/ui.js";
+
+    ui.app("Window Functions + Ranking")
+      .blurb("Rank members inside each team.")
+      .section("Add score")
+        .action("Add score")
+          .post("/scores")
+          .fields({
+            team: "red",
+            member: "Eve",
+            score: { type: "number", value: 88 }
+          })
+          .refreshAll()
+          .end()
+        .action("Refresh").get("/rankings").refreshAll().end()
+        .end()
+      .section("Rankings")
+        .read("/rankings")
+        .list("{{team}} #{{rank}} {{member}} ({{score}})")
+        .end()
+      .mount();
+  </script>
+</body>
+</html>

@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Todo List - Client State</title>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import ui from "/ui.js";
+
+    ui.app("10.4 Todo List")
+      .blurb("Classic todo app. Add, complete, delete, filter - all client-side state.")
+
+      .section("Todos")
+        .query({ todos: [], nextId: 1, filter: "all", newTodo: "" })
+        .customView(({ store }) => {
+          const todos = store.todos || [];
+          const filter = store.filter || "all";
+          const newTodo = store.newTodo || "";
+          const filtered = todos.filter(t =>
+            filter === "all" ? true :
+            filter === "active" ? !t.done :
+            t.done
+          );
+
+          const total = todos.length;
+          const active = todos.filter(t => !t.done).length;
+          const completed = todos.filter(t => t.done).length;
+
+          return `
+            <!-- Add Todo -->
+            <div class="flex gap-2 mb-4">
+              <input type="text" id="new-todo" placeholder="What needs to be done?" value="${newTodo}"
+                class="flex-1 px-3 py-2 border border-slate-300 rounded" />
+              <button id="add-btn" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                Add
+              </button>
+            </div>
+
+            <!-- Filters -->
+            <div class="flex gap-2 mb-4">
+              <button class="filter-btn px-3 py-1 rounded ${filter === 'all' ? 'bg-slate-900 text-white' : 'bg-slate-200'}" data-filter="all">
+                All (${total})
+              </button>
+              <button class="filter-btn px-3 py-1 rounded ${filter === 'active' ? 'bg-slate-900 text-white' : 'bg-slate-200'}" data-filter="active">
+                Active (${active})
+              </button>
+              <button class="filter-btn px-3 py-1 rounded ${filter === 'completed' ? 'bg-slate-900 text-white' : 'bg-slate-200'}" data-filter="completed">
+                Completed (${completed})
+              </button>
+              ${completed > 0 ? `
+                <button id="clear-completed" class="ml-auto px-3 py-1 text-red-500 hover:bg-red-50 rounded">
+                  Clear completed
+                </button>
+              ` : ''}
+            </div>
+
+            <!-- Todo List -->
+            <div class="space-y-2">
+              ${filtered.length === 0
+                ? `<div class="text-slate-400 text-center py-8">${
+                    filter === 'all' ? 'No todos yet. Add one above!' :
+                    filter === 'active' ? 'No active todos' :
+                    'No completed todos'
+                  }</div>`
+                : filtered.map(t => `
+                    <div class="flex items-center gap-3 p-3 rounded border ${t.done ? 'bg-slate-50 border-slate-200' : 'border-slate-300'}" data-id="${t.id}">
+                      <input type="checkbox" class="todo-check w-5 h-5 cursor-pointer" ${t.done ? 'checked' : ''} />
+                      <span class="flex-1 ${t.done ? 'line-through text-slate-400' : ''}">${t.text}</span>
+                      <button class="todo-delete px-2 py-1 text-red-500 hover:bg-red-50 rounded text-sm">
+                        Delete
+                      </button>
+                    </div>
+                  `).join('')
+              }
+            </div>
+          `;
+        })
+        .onRender(({ store, element }) => {
+          // Ensure store properties are initialized
+          if (store.newTodo === undefined) store.newTodo = "";
+          if (!store.todos) store.todos = [];
+          if (!store.nextId) store.nextId = 1;
+
+          // New todo input
+          const input = element.querySelector('#new-todo');
+          if (input) {
+            input.addEventListener('input', (e) => {
+              store.newTodo = e.target.value;
+            });
+            input.addEventListener('keypress', (e) => {
+              const text = (store.newTodo || "").trim();
+              if (e.key === 'Enter' && text) {
+                store.todos.push({ id: store.nextId, text: text, done: false });
+                store.todos = [...store.todos];
+                store.nextId++;
+                store.newTodo = '';
+                window.dispatchEvent(new CustomEvent('ui:refresh:todos'));
+              }
+            });
+          }
+
+          // Add button
+          const addBtn = element.querySelector('#add-btn');
+          if (addBtn) {
+            addBtn.addEventListener('click', () => {
+              const text = (store.newTodo || "").trim();
+              if (!text) return;
+              store.todos.push({ id: store.nextId, text: text, done: false });
+              store.todos = [...store.todos];
+              store.nextId++;
+              store.newTodo = '';
+              window.dispatchEvent(new CustomEvent('ui:refresh:todos'));
+            });
+          }
+
+          // Filter buttons
+          element.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+              store.filter = btn.dataset.filter;
+              window.dispatchEvent(new CustomEvent('ui:refresh:todos'));
+            });
+          });
+
+          // Clear completed
+          const clearBtn = element.querySelector('#clear-completed');
+          if (clearBtn) {
+            clearBtn.addEventListener('click', () => {
+              store.todos = store.todos.filter(t => !t.done);
+              window.dispatchEvent(new CustomEvent('ui:refresh:todos'));
+            });
+          }
+
+          // Todo checkboxes
+          element.querySelectorAll('.todo-check').forEach(cb => {
+            cb.addEventListener('change', (e) => {
+              const id = parseInt(e.target.closest('[data-id]').dataset.id);
+              const todo = store.todos.find(t => t.id === id);
+              if (todo) todo.done = e.target.checked;
+              store.todos = [...store.todos];
+              window.dispatchEvent(new CustomEvent('ui:refresh:todos'));
+            });
+          });
+
+          // Delete buttons
+          element.querySelectorAll('.todo-delete').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+              const id = parseInt(e.target.closest('[data-id]').dataset.id);
+              store.todos = store.todos.filter(t => t.id !== id);
+              window.dispatchEvent(new CustomEvent('ui:refresh:todos'));
+            });
+          });
+        })
+        .end()
+
+      .mount();
+  </script>
+</body>
+</html>

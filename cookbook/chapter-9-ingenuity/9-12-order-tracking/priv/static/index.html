@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Order Tracker</title>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import ui from "/ui.js";
+
+    ui.app("Order Lifecycle Tracker")
+      .blurb("Track orders through multiple stages with a full event history.")
+      .group("Management")
+        .grid(2)
+        .section("Place Order")
+          .action("Buy Product").post("/orders")
+            .field("product", "Magic Flute v2")
+            .refreshAll()
+            .end()
+          .end()
+        .section("Update Status (Admin)")
+          .read("/orders")
+          .rowField("status", { type: "select", options: ["PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED"] })
+          .rowField("note", "Arriving soon")
+          .rowAction("Update").post("/orders/{{tracking_id}}/update").refreshAll().end()
+          .end()
+        .end()
+      .section("Track Package")
+        .id("tracker")
+        .query({ id: "" })
+        .fields({
+          id: { placeholder: "Enter Tracking ID (e.g. TRK-12345)" }
+        })
+        .action("Track").get("/track").refreshAll().end()
+        .read("/track")
+        .customView(({ data }) => {
+          if (!data || !data.events || data.events.length === 0) return "<p class='text-sm text-slate-400'>Enter a valid Tracking ID to see the history.</p>";
+
+          return `
+            <div class="relative border-l-2 border-indigo-200 ml-3 pl-6 space-y-6">
+              ${data.events.map(ev => `
+                <div class="relative">
+                  <div class="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-indigo-600 border-2 border-white"></div>
+                  <div class="bg-white p-3 border rounded-lg shadow-sm">
+                    <div class="flex justify-between items-start mb-1">
+                      <span class="text-xs font-bold text-indigo-600 uppercase tracking-tighter">${ev.status}</span>
+                      <span class="text-[10px] text-slate-400">${ev.ts}</span>
+                    </div>
+                    <p class="text-sm text-slate-700">${ev.note || 'No additional details.'}</p>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          `;
+        })
+        .end()
+      .mount();
+  </script>
+</body>
+</html>

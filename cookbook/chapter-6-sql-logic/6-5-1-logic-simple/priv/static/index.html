@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>6.5.1 Simple State</title>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import ui from "/ui.js";
+
+    ui.app("6.5.1 Simple State")
+      .blurb("Ticket open/close with guards.")
+      .section("Create and close")
+        .action("Add ticket")
+          .post("/tickets")
+          .fields({ title: "Fix bug" })
+          .refreshAll()
+          .end()
+        .action("Close")
+          .fields({ id: { type: "number", value: 1 } })
+          .custom(async ({ body, request, output, setFooter }) => {
+            const res = await request(`/tickets/${body.id}/close`, { method: "POST" });
+            output.textContent = res.raw || "-";
+            setFooter(res);
+          })
+          .refreshAll()
+          .end()
+        .end()
+      .section("Tickets")
+        .read("/tickets")
+        .list("{{id}} {{title}} [{{status}}]")
+        .end()
+      .mount();
+  </script>
+</body>
+</html>

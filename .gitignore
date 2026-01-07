@@ -1,0 +1,58 @@
+# Secrets and config
+.env
+.env.*
+!.env.example
+
+# Elixir / Mix - recursive patterns (matches anywhere in tree)
+_build/
+deps/
+*.beam
+*.ez
+erl_crash.dump
+.elixir_ls/
+mix.lock
+.fetch
+cover/
+
+# JavaScript / Node
+node_modules/
+npm-debug.log*
+package-lock.json
+
+# Go binaries
+portal/portal
+cookbook/portal/portal
+cookbook/portal/portal_server
+*.exe
+
+# System / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Application logs and databases
+*.log
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+
+# Generated dev files
+ui/src/.ui_dev.js
+**/priv/static/ui.js
+
+# Uploaded files
+**/uploads/*
+!**/uploads/.gitkeep
+
+# Temporary files
+/tmp/
+*.tmp
+
+# Test/coverage artifacts
+/cover/
+*.coverdata

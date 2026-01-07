@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Data Exporter</title>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import ui from "/ui.js";
+
+    ui.app("Memory-Efficient Exporter")
+      .blurb("Demonstrating how to handle large data exports without backend memory spikes.")
+      .section("Database Overview")
+        .read("/stats")
+        .kpis([
+          { label: "Total Records", path: "data.total_records" }
+        ])
+        .end()
+      .section("Actions")
+        .customView(() => `
+          <div class="p-4 bg-slate-50 border rounded-lg text-center">
+            <p class="mb-4 text-sm text-slate-600">Export the entire measurements database as a CSV file.</p>
+            <a href="/export" download="measurements.csv" class="inline-block bg-slate-900 text-white px-6 py-2 rounded-lg font-bold hover:bg-slate-800 transition-colors">
+              Export CSV
+            </a>
+          </div>
+        `)
+        .end()
+      .mount();
+  </script>
+</body>
+</html>

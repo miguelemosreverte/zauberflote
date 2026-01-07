@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>4.2 Idempotency</title>
+</head>
+<body>
+  <div id="app"></div>
+  <script type="module">
+    import ui from "/ui.js";
+
+    ui.app("4.2 Idempotency")
+      .section("Charge")
+        .action("Charge")
+          .post("/charge")
+          .fields({
+            key: { placeholder: "idempotency key", value: "abc-123" },
+            amount: { type: "number", value: 10 }
+          })
+          .headers({ "Idempotency-Key": "{{key}}" })
+          .end()
+        .end()
+      .mount();
+  </script>
+</body>
+</html>

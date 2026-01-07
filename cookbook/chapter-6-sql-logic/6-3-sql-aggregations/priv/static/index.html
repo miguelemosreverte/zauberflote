@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>6.3 Aggregations + Group By</title>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import ui from "/ui.js";
+
+    ui.app("Aggregations + Group By")
+      .blurb("Totals and averages per category.")
+      .section("Add sale")
+        .action("Add sale")
+          .post("/sales")
+          .fields({ category: "stationery", amount: { type: "number", value: 12.5 } })
+          .refreshAll()
+          .end()
+        .action("Refresh report").get("/report").refreshAll().end()
+        .end()
+      .section("Sales")
+        .read("/sales")
+        .list("{{id}} {{category}} ${{amount}}")
+        .end()
+      .section("Report")
+        .read("/report")
+        .list("{{category}}: total ${{total}} avg ${{average}} count {{count}}")
+        .end()
+      .mount();
+  </script>
+</body>
+</html>

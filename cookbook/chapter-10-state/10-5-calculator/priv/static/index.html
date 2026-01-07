@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Calculator - Client State</title>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import ui from "/ui.js";
+
+    ui.app("10.5 Calculator")
+      .blurb("Calculator with memory. Demonstrates accumulator pattern with client-side state.")
+
+      .section("Calculator")
+        .query({ display: "0", memory: 0, operator: null, operand: null, newNumber: true })
+        .customView(({ store }) => {
+          const display = store.display ?? "0";
+          const memory = store.memory ?? 0;
+          return `
+          <div class="max-w-xs mx-auto">
+            <div class="bg-slate-900 text-white p-4 rounded-t-lg">
+              <div class="text-right text-xs text-slate-400 h-4">${memory !== 0 ? 'M: ' + memory : ''}</div>
+              <div class="text-right text-4xl font-mono">${display}</div>
+            </div>
+            <div class="grid grid-cols-4 gap-1 bg-slate-800 p-2 rounded-b-lg">
+              <button class="calc-btn bg-slate-600 text-white p-3 rounded text-sm font-medium hover:bg-slate-500" data-key="MC">MC</button>
+              <button class="calc-btn bg-slate-600 text-white p-3 rounded text-sm font-medium hover:bg-slate-500" data-key="MR">MR</button>
+              <button class="calc-btn bg-slate-600 text-white p-3 rounded text-sm font-medium hover:bg-slate-500" data-key="M+">M+</button>
+              <button class="calc-btn bg-slate-600 text-white p-3 rounded text-sm font-medium hover:bg-slate-500" data-key="M-">M-</button>
+              <button class="calc-btn bg-red-500 text-white p-3 rounded text-lg font-medium hover:bg-red-400" data-key="C">C</button>
+              <button class="calc-btn bg-slate-500 text-white p-3 rounded text-lg font-medium hover:bg-slate-400" data-key="±">±</button>
+              <button class="calc-btn bg-slate-500 text-white p-3 rounded text-lg font-medium hover:bg-slate-400" data-key="%">%</button>
+              <button class="calc-btn bg-amber-500 text-white p-3 rounded text-lg font-medium hover:bg-amber-400" data-key="÷">÷</button>
+              <button class="calc-btn bg-slate-700 text-white p-3 rounded text-xl font-medium hover:bg-slate-600" data-key="7">7</button>
+              <button class="calc-btn bg-slate-700 text-white p-3 rounded text-xl font-medium hover:bg-slate-600" data-key="8">8</button>
+              <button class="calc-btn bg-slate-700 text-white p-3 rounded text-xl font-medium hover:bg-slate-600" data-key="9">9</button>
+              <button class="calc-btn bg-amber-500 text-white p-3 rounded text-lg font-medium hover:bg-amber-400" data-key="×">×</button>
+              <button class="calc-btn bg-slate-700 text-white p-3 rounded text-xl font-medium hover:bg-slate-600" data-key="4">4</button>
+              <button class="calc-btn bg-slate-700 text-white p-3 rounded text-xl font-medium hover:bg-slate-600" data-key="5">5</button>
+              <button class="calc-btn bg-slate-700 text-white p-3 rounded text-xl font-medium hover:bg-slate-600" data-key="6">6</button>
+              <button class="calc-btn bg-amber-500 text-white p-3 rounded text-lg font-medium hover:bg-amber-400" data-key="-">-</button>
+              <button class="calc-btn bg-slate-700 text-white p-3 rounded text-xl font-medium hover:bg-slate-600" data-key="1">1</button>
+              <button class="calc-btn bg-slate-700 text-white p-3 rounded text-xl font-medium hover:bg-slate-600" data-key="2">2</button>
+              <button class="calc-btn bg-slate-700 text-white p-3 rounded text-xl font-medium hover:bg-slate-600" data-key="3">3</button>
+              <button class="calc-btn bg-amber-500 text-white p-3 rounded text-lg font-medium hover:bg-amber-400" data-key="+">+</button>
+              <button class="calc-btn bg-slate-700 text-white p-3 rounded text-xl font-medium hover:bg-slate-600 col-span-2" data-key="0">0</button>
+              <button class="calc-btn bg-slate-700 text-white p-3 rounded text-xl font-medium hover:bg-slate-600" data-key=".">.</button>
+              <button class="calc-btn bg-amber-600 text-white p-3 rounded text-lg font-bold hover:bg-amber-500" data-key="=">=</button>
+            </div>
+          </div>
+        `;
+        })
+        .onRender(({ store, element }) => {
+          const calculate = (a, op, b) => {
+            switch (op) {
+              case '+': return a + b;
+              case '-': return a - b;
+              case '×': return a * b;
+              case '÷': return b !== 0 ? a / b : 'Error';
+              default: return b;
+            }
+          };
+
+          element.querySelectorAll('.calc-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+              const key = btn.dataset.key;
+              const num = parseFloat(store.display) || 0;
+
+              if ('0123456789'.includes(key)) {
+                store.display = store.newNumber ? key : (store.display || "0") + key;
+                store.newNumber = false;
+              } else if (key === '.') {
+                if (!store.display.includes('.')) {
+                  store.display = store.newNumber ? '0.' : store.display + '.';
+                  store.newNumber = false;
+                }
+              } else if ('+-×÷'.includes(key)) {
+                if (store.operator && !store.newNumber) {
+                  const result = calculate(store.operand, store.operator, num);
+                  store.display = String(result);
+                }
+                store.operator = key;
+                store.operand = parseFloat(store.display);
+                store.newNumber = true;
+              } else if (key === '=') {
+                if (store.operator) {
+                  const result = calculate(store.operand, store.operator, num);
+                  store.display = String(result);
+                  store.operator = null;
+                  store.operand = null;
+                  store.newNumber = true;
+                }
+              } else if (key === 'C') {
+                store.display = '0';
+                store.operator = null;
+                store.operand = null;
+                store.newNumber = true;
+              } else if (key === '±') {
+                store.display = String(-parseFloat(store.display));
+              } else if (key === '%') {
+                store.display = String(parseFloat(store.display) / 100);
+              } else if (key === 'MC') {
+                store.memory = 0;
+              } else if (key === 'MR') {
+                store.display = String(store.memory);
+                store.newNumber = true;
+              } else if (key === 'M+') {
+                store.memory = (store.memory || 0) + num;
+              } else if (key === 'M-') {
+                store.memory = (store.memory || 0) - num;
+              }
+
+              window.dispatchEvent(new CustomEvent('ui:refresh:calc'));
+            });
+          });
+        })
+        .end()
+
+      .mount();
+  </script>
+</body>
+</html>

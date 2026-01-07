@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>5.5 Scheduler</title>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import ui from "/ui.js";
+
+    ui.app("Scheduler + Background Ticks")
+      .blurb("A background job inserts ticks every 2s.")
+      .section("Controls")
+        .action("Start").post("/control").body({ enabled: true }).refreshAll().end()
+        .action("Stop").post("/control").body({ enabled: false }).refreshAll().end()
+        .action("Refresh").get("/ticks").refreshAll().end()
+        .end()
+      .section("Recent Ticks")
+        .read("/ticks")
+        .list("{{id}} {{note}} {{created_at}}")
+        .end()
+      .mount();
+  </script>
+</body>
+</html>

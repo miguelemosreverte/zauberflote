@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>5.1 WebSocket Server</title>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import ui from "/ui.js";
+
+    ui.app("WebSocket Server")
+      .blurb("Two clients connected to the same server. Messages broadcast to both.")
+      .section("Clients")
+        .websocket({
+          url: `ws://${location.host}/ws`,
+          clients: [
+            { label: "Client A", name: "Alice", message: "hello from Alice" },
+            { label: "Client B", name: "Bob", message: "hello from Bob" }
+          ],
+          history: "/messages",
+          pollHistory: 1000
+        })
+        .end()
+      .mount();
+  </script>
+</body>
+</html>

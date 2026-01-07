@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Crypto Live Tracker</title>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import ui from "/ui.js";
+
+    ui.app("Live Crypto Tracker")
+      .blurb("Demonstrating an Elixir GenServer proxying 'live' external data.")
+      .section("Current Market Prices")
+        .read("/prices")
+        .kpis([
+          { label: "Bitcoin (BTC)", path: "data.btc" },
+          { label: "Ethereum (ETH)", path: "data.eth" }
+        ])
+        .end()
+      .section("Metadata")
+        .read("/prices")
+        .list("Last updated: {{last_update}}")
+        .end()
+      .mount();
+
+    setInterval(() => {
+      window.dispatchEvent(new CustomEvent('ui:refresh:current-market-prices'));
+      window.dispatchEvent(new CustomEvent('ui:refresh:metadata'));
+    }, 5000);
+  </script>
+</body>
+</html>

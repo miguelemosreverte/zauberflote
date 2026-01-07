@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>6.5.3 Cross-aggregate Constraints</title>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import ui from "/ui.js";
+
+    ui.app("6.5.3 Cross-aggregate Constraints")
+      .blurb("Reserve stock only if enough quantity exists.")
+      .section("Stock")
+        .action("Save")
+          .post("/stock")
+          .fields({ sku: "SKU-1", qty: { type: "number", value: 10 } })
+          .refreshAll()
+          .end()
+        .end()
+      .section("Inventory")
+        .read("/stock")
+        .list("{{sku}} qty={{qty}}")
+        .end()
+      .section("Reserve")
+        .action("Reserve")
+          .post("/reserve")
+          .fields({ sku: "SKU-1", qty: { type: "number", value: 3 } })
+          .refreshAll()
+          .end()
+        .end()
+      .section("Reservations")
+        .read("/reservations")
+        .list("{{id}} {{sku}} qty={{qty}} [{{status}}]")
+        .end()
+      .mount();
+  </script>
+</body>
+</html>

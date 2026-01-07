@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>6.7 Views + Read Models</title>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import ui from "/ui.js";
+
+    ui.app("Views + Read Models")
+      .blurb("Order totals via SQL view.")
+      .section("Create Order")
+        .action("Add order")
+          .post("/orders")
+          .field("customer", "Acme")
+          .refreshAll()
+          .end()
+        .read("/orders")
+        .store({ orders: "data" })
+        .list("{{id}} {{customer}}")
+        .end()
+      .section("Add Line Item")
+        .fields({
+          order_id: { type: "select", optionsFrom: "orders", optionLabel: "{{id}} {{customer}}", optionValue: "id" },
+          name: { value: "Widget" },
+          price: { type: "number", value: 10 }
+        })
+        .action("Add item")
+          .post("/items")
+          .refreshAll()
+          .end()
+        .end()
+      .section("Order Totals (View)")
+        .read("/totals")
+        .list("{{order_id}} {{customer}} items={{item_count}} total=${{total}}")
+        .end()
+      .mount();
+  </script>
+</body>
+</html>

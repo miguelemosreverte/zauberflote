@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Activity Heatmap</title>
+  <style>
+    .heatmap-cell {
+      width: 12px;
+      height: 12px;
+      border-radius: 2px;
+      margin: 1px;
+    }
+    .heatmap-tooltip {
+      position: absolute;
+      background: #1f2937;
+      color: white;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      pointer-events: none;
+      z-index: 1000;
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import ui from "/ui.js";
+
+    ui.app("Activity Heatmap")
+      .blurb("GitHub-style contribution heatmap showing activity patterns over time.")
+      .section("Add Activity")
+        .action("Log Activity").post("/activities")
+          .field("date", new Date().toISOString().split('T')[0])
+          .field("count", 1)
+          .field("category", "commits")
+          .refreshAll()
+          .end()
+        .end()
+      .section("Contribution Heatmap")
+        .id("heatmap")
+        .read("/activities")
+        .mock(() => {
+          // Generate mock data for past 90 days
+          const data = [];
+          for (let i = 0; i < 90; i++) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            if (Math.random() > 0.3) {
+              data.push({
+                date: d.toISOString().split('T')[0],
+                total: Math.floor(Math.random() * 15) + 1,
+                categories: ['commits', 'reviews'][Math.floor(Math.random() * 2)]
+              });
+            }
+          }
+          return data;
+        })
+        .customView(({ data }) => {
+          return `<div class="overflow-x-auto bg-slate-50 rounded-lg p-4">
+            <div id="heatmap-grid" class="flex flex-wrap gap-0.5" style="max-width: 900px;"></div>
+            <div class="flex items-center gap-2 mt-4 text-sm text-slate-600">
+              <span>Less</span>
+              <div class="heatmap-cell" style="background: #ebedf0;"></div>
+              <div class="heatmap-cell" style="background: #9be9a8;"></div>
+              <div class="heatmap-cell" style="background: #40c463;"></div>
+              <div class="heatmap-cell" style="background: #30a14e;"></div>
+              <div class="heatmap-cell" style="background: #216e39;"></div>
+              <span>More</span>
+            </div>
+          </div>`;
+        })
+        .onRender(({ data, element }) => {
+          const grid = element.querySelector('#heatmap-grid');
+          if (!grid) return;
+          grid.innerHTML = '';
+
+          // Build date->count map
+          const activityMap = {};
+          let maxCount = 1;
+          (data || []).forEach(item => {
+            activityMap[item.date] = item.total;
+            if (item.total > maxCount) maxCount = item.total;
+          });
+
+          // Generate cells for past 365 days (52 weeks)
+          const today = new Date();
+          const cells = [];
+
+          for (let i = 364; i >= 0; i--) {
+            const d = new Date(today);
+            d.setDate(d.getDate() - i);
+            const dateStr = d.toISOString().split('T')[0];
+            const count = activityMap[dateStr] || 0;
+            cells.push({ date: dateStr, count, dayOfWeek: d.getDay() });
+          }
+
+          // Color scale
+          const getColor = (count) => {
+            if (count === 0) return '#ebedf0';
+            const ratio = count / maxCount;
+            if (ratio < 0.25) return '#9be9a8';
+            if (ratio < 0.5) return '#40c463';
+            if (ratio < 0.75) return '#30a14e';
+            return '#216e39';
+          };
+
+          // Create grid (7 rows for days of week, columns for weeks)
+          const weeks = [];
+          let currentWeek = [];
+
+          cells.forEach((cell, i) => {
+            if (i === 0) {
+              // Pad first week
+              for (let j = 0; j < cell.dayOfWeek; j++) {
+                currentWeek.push(null);
+              }
+            }
+            currentWeek.push(cell);
+            if (cell.dayOfWeek === 6 || i === cells.length - 1) {
+              weeks.push(currentWeek);
+              currentWeek = [];
+            }
+          });
+
+          // Render as columns (weeks)
+          const container = document.createElement('div');
+          container.className = 'flex gap-0.5';
+
+          weeks.forEach(week => {
+            const col = document.createElement('div');
+            col.className = 'flex flex-col gap-0.5';
+
+            for (let day = 0; day < 7; day++) {
+              const cell = week.find(c => c && c.dayOfWeek === day);
+              const div = document.createElement('div');
+              div.className = 'heatmap-cell cursor-pointer transition-transform hover:scale-125';
+
+              if (cell) {
+                div.style.background = getColor(cell.count);
+                div.dataset.date = cell.date;
+                div.dataset.count = cell.count;
+
+                div.addEventListener('mouseenter', (e) => {
+                  const tooltip = document.createElement('div');
+                  tooltip.className = 'heatmap-tooltip';
+                  tooltip.id = 'heatmap-tooltip';
+                  tooltip.textContent = `${cell.count} activities on ${cell.date}`;
+                  tooltip.style.left = e.pageX + 10 + 'px';
+                  tooltip.style.top = e.pageY - 30 + 'px';
+                  document.body.appendChild(tooltip);
+                });
+
+                div.addEventListener('mouseleave', () => {
+                  const tooltip = document.getElementById('heatmap-tooltip');
+                  if (tooltip) tooltip.remove();
+                });
+              } else {
+                div.style.background = 'transparent';
+              }
+
+              col.appendChild(div);
+            }
+
+            container.appendChild(col);
+          });
+
+          grid.appendChild(container);
+        })
+        .end()
+      .section("Statistics")
+        .read("/stats")
+        .mock(() => ({ total_entries: 87, total_activities: 423, max_daily: 15, avg_daily: 4.9 }))
+        .kpis([
+          { label: "Total Days", compute: (d) => d?.total_entries },
+          { label: "Total Activities", compute: (d) => d?.total_activities },
+          { label: "Max Daily", compute: (d) => d?.max_daily },
+          { label: "Avg Daily", compute: (d) => d?.avg_daily?.toFixed(1) }
+        ], "data")
+        .end()
+      .mount();
+  </script>
+</body>
+</html>

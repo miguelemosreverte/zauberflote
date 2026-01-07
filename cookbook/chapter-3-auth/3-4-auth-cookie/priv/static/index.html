@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Auth Cookie</title>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import ui from "/ui.js";
+
+    ui.app("3.4 Cookie Session Auth")
+      .blurb("Login sets a session cookie; protected routes check it. Try: admin / admin123.")
+      .section("Session")
+        .action("Login")
+          .post("/auth/login")
+          .creds()
+          .fields({ user: "admin", pass: { type: "password", value: "admin123" } })
+          .end()
+        .action("Logout").post("/auth/logout").creds().end()
+        .action("Call /protected").get("/protected").creds().end()
+        .end()
+      .mount();
+  </script>
+</body>
+</html>

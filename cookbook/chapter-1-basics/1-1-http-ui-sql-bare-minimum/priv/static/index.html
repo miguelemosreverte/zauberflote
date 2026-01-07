@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Envelope Budgeting</title>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import ui from "/ui.js";
+
+    ui.app("Envelope Bare Minimum")
+      .blurb("Add income, allocate to envelopes, and spend from envelopes.")
+      .section("Income")
+        .read("/income")
+        .list("$ {{amount}}")
+        .action("Add income").post("/income/add").field("amount", 100, "number").end()
+        .end()
+      .section("Envelopes")
+        .read("/envelopes")
+        .list("{{name}} · ${{amount}}")
+        .action("Create envelope").post("/envelopes").field("name", "Rent").end()
+        .rowField("amount", { type: "number", value: 25, placeholder: "amount" })
+        .rowAction("Allocate").post("/envelopes/{{id}}/allocate").refreshAll().end()
+        .rowAction("Spend").post("/envelopes/{{id}}/spend").refreshAll().end()
+        .end()
+      .mount();
+  </script>
+</body>
+</html>

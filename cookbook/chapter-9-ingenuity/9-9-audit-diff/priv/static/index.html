@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Audit Trail Diff</title>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import ui from "/ui.js";
+
+    ui.app("Settings with Audit Diff")
+      .blurb("Change settings and see exactly what changed in the last version.")
+      .section("Update Settings")
+        .read("/settings")
+        .fields({
+          site_name: { value: "{{site_name}}" },
+          active: { type: "select", options: [{value: 1, label: "Enabled"}, {value: 0, label: "Disabled"}] }
+        })
+        .action("Save Changes").post("/settings").refreshAll().end()
+        .end()
+      .section("Last Change Analysis")
+        .read("/diff")
+        .customView(({ data }) => {
+          if (!data || !data.has_diff) return "<p class='text-sm text-slate-400'>No recent changes to analyze.</p>";
+
+          return `
+            <div class="space-y-3">
+              ${Object.entries(data.changes).map(([key, val]) => `
+                <div class="rounded border overflow-hidden">
+                  <div class="bg-slate-100 p-2 text-xs font-bold font-mono">${key}</div>
+                  <div class="flex text-sm font-mono">
+                    <div class="flex-1 p-2 bg-rose-50 text-rose-700 line-through border-r">${val.old}</div>
+                    <div class="flex-1 p-2 bg-emerald-50 text-emerald-700 font-bold">${val.new}</div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          `;
+        })
+        .end()
+      .mount();
+  </script>
+</body>
+</html>

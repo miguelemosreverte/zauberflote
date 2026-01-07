@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>4.7 Observability</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body>
+    <div id="app"></div>
+
+    <script type="module">
+      import ui from "/ui.js";
+
+      ui.app("Observability Basics")
+        .blurb("Track request IDs, metrics, and logs for orders.")
+        .section("Orders")
+          .action("Create order")
+            .post("/orders")
+            .field("total", 49, "number")
+            .headersFrom({ requestId: "x-request-id" })
+            .refreshAll()
+            .end()
+          .action("Refresh orders")
+            .get("/orders")
+            .headersFrom({ requestId: "x-request-id" })
+            .refreshAll()
+            .end()
+          .read("/orders")
+          .list("#{{id}} total={{total}}")
+          .end()
+      .section("Metrics")
+        .noOutput()
+        .action("Load metrics")
+          .get("/metrics")
+          .store({ metrics: "data" })
+            .headersFrom({ requestId: "x-request-id" })
+            .refreshAll()
+            .end()
+          .auto("metrics")
+          .end()
+        ;
+    </script>
+  </body>
+</html>

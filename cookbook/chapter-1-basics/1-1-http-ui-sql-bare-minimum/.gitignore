@@ -1,0 +1,4 @@
+/app.db
+/_build
+/deps
+/.elixir_ls

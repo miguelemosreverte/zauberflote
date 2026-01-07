@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>5.3 HTTP Client + Retries</title>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import ui from "/ui.js";
+
+    ui.app("HTTP Client + Retries")
+      .blurb("Calls aux /flaky with retries and backoff.")
+      .section("Retry call")
+        .action("Reset aux").post("/reset").end()
+        .action("Fetch with retries")
+          .post("/fetch")
+          .field("retries", 3, "number")
+          .end()
+        .end()
+      .mount();
+  </script>
+</body>
+</html>

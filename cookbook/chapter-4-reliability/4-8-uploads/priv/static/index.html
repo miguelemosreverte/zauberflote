@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>4.8 Uploads</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body>
+    <div id="app"></div>
+
+    <script type="module">
+      import ui from "/ui.js";
+
+      ui.app("Uploads + Validation")
+        .blurb("Upload a file and review stored metadata.")
+        .section("Uploads")
+          .action("Upload file").upload("/uploads").field("file", { type: "file" }).end()
+          .action("Refresh").get("/uploads").end()
+          .read("/uploads")
+          .list("#{{id}} {{filename}} ({{size}} bytes) · {{content_type}}")
+          .end()
+        .mount();
+    </script>
+  </body>
+</html>

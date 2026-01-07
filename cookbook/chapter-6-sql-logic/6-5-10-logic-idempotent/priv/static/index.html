@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>6.5.10 Idempotent Commands</title>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import ui from "/ui.js";
+
+    ui.app("6.5.10 Idempotent Commands")
+      .blurb("Apply discount once per idempotency key.")
+      .section("Create order")
+        .action("Create order")
+          .post("/orders")
+          .fields({ total: { type: "number", value: 100 } })
+          .refreshAll()
+          .end()
+        .end()
+      .section("Last discount result")
+        .storeView("lastStatus", "status={{lastStatus}} · cached_order={{cachedOrder}} · cached_amount={{cachedAmount}}")
+        .end()
+      .section("Orders")
+        .read("/orders")
+        .list("{{id}} total={{total}}")
+        .rowField("key", { value: "key-1" })
+        .rowField("amount", { type: "number", value: 30 })
+        .rowAction("Apply discount")
+          .post("/orders/{{id}}/discount")
+          .headers({ "Idempotency-Key": "{{key}}" })
+          .store({
+            lastStatus: "data.status",
+            cachedOrder: "data.cached.order_id",
+            cachedAmount: "data.cached.amount"
+          })
+          .refreshAll()
+          .end()
+        .end()
+      .mount();
+  </script>
+</body>
+</html>

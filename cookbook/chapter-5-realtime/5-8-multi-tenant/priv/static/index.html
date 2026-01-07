@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>5.8 Multi-tenant Scoping</title>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import ui from "/ui.js";
+
+    ui.app("Multi-tenant Scoping")
+      .blurb("Use X-Tenant-ID to isolate tenant data.")
+      .section("Tenant controls")
+        .fields({
+          tenant: { value: "acme" },
+          name: { value: "Sample item" }
+        })
+        .action("Create")
+          .post("/items")
+          .headers({ "X-Tenant-ID": "{{tenant}}" })
+          .refreshAll()
+          .end()
+        .action("Load")
+          .get("/items")
+          .headers({ "X-Tenant-ID": "{{tenant}}" })
+          .store({ tenantItems: "data" })
+          .refreshAll()
+          .end()
+        .end()
+      .section("Tenant Items")
+        .listFrom("tenantItems.items")
+        .list("{{id}} {{name}}")
+        .end()
+      .mount();
+  </script>
+</body>
+</html>

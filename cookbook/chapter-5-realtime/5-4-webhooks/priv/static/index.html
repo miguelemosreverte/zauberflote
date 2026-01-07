@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>5.4 Webhooks</title>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import ui from "/ui.js";
+
+    ui.app("Webhooks")
+      .blurb("Send outgoing webhooks to aux and receive signed webhooks.")
+      .section("Payload")
+        .fields({ payload: { type: "textarea", rows: 3, value: '{"event":"invoice.paid","amount":120}' } })
+        .action("Send to aux")
+          .custom(async ({ body, request, output, setFooter }) => {
+            const payload = JSON.parse(body.payload || '{}');
+            const res = await request('/webhooks/send', { method: 'POST', body: { payload } });
+            output.textContent = res.raw || '-';
+            setFooter(res);
+          })
+          .end()
+        .action("Receive signed")
+          .custom(async ({ body, request, output, setFooter }) => {
+            const payload = JSON.parse(body.payload || '{}');
+            const raw = JSON.stringify(payload);
+            const key = await crypto.subtle.importKey(
+              'raw',
+              new TextEncoder().encode('chapter5_secret'),
+              { name: 'HMAC', hash: 'SHA-256' },
+              false,
+              ['sign']
+            );
+            const signature = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(raw));
+            const hex = Array.from(new Uint8Array(signature)).map(b => b.toString(16).padStart(2, '0')).join('');
+            const res = await request('/webhooks/receive', { method: 'POST', body: payload, headers: { 'X-Signature': hex } });
+            output.textContent = res.raw || '-';
+            setFooter(res);
+          })
+          .refreshAll()
+          .end()
+        .end()
+      .section("Received Webhooks")
+        .read("/webhooks")
+        .list("{{id}} {{source}} {{payload}}")
+        .end()
+      .mount();
+  </script>
+</body>
+</html>

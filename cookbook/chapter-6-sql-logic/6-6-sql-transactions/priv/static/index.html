@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>6.6 Transactions + Consistency</title>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import ui from "/ui.js";
+
+    ui.app("Transactions + Consistency")
+      .blurb("Transfer between accounts with ledger entry.")
+      .section("Transfer")
+        .fields({
+          from: { value: 1 },
+          to: { value: 2 },
+          amount: { type: "number", value: 10 }
+        })
+        .action("Transfer")
+          .post("/transfer")
+          .refreshAll()
+          .end()
+        .action("Refresh").get("/ledger").refreshAll().end()
+        .end()
+      .section("Accounts")
+        .read("/accounts")
+        .list("{{id}} balance {{balance}}")
+        .end()
+      .section("Ledger")
+        .read("/ledger")
+        .list("{{id}} {{from}}->{{to}} ${{amount}}")
+        .end()
+      .mount();
+  </script>
+</body>
+</html>

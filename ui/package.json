@@ -1,0 +1,14 @@
+{
+  "name": "zauberflote",
+  "version": "1.0.2",
+  "description": "Shared UI components for the working examples book.",
+  "type": "module",
+  "main": "src/ui.js",
+  "scripts": {
+    "publish:local": "./publish_local.sh",
+    "publish:public": "./publish_public.sh",
+    "test": "echo \"No tests yet\" && exit 0"
+  },
+  "author": "",
+  "license": "ISC"
+}

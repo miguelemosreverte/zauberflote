@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Envelope HTTP Basics</title>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import ui from "/ui.js";
+
+    ui.app("HTTP Basics (CRUD + Query Params)")
+      .blurb("CRUD, filtering, pagination, and envelope operations.")
+      .section("Income")
+        .read("/income")
+        .list("$ {{amount}}")
+        .action("Add income").post("/income/add").field("amount", 100, "number").end()
+        .end()
+      .section("Create envelope")
+        .action("Create envelope").post("/envelopes").field("name", "Rent").end()
+        .end()
+      .section("Query + Pagination")
+        .fields({
+          q: { placeholder: "filter by name" },
+          limit: { type: "number", value: 10 },
+          offset: { type: "number", value: 0 }
+        })
+        .query({ q: "{{q}}", limit: "{{limit}}", offset: "{{offset}}" })
+        .action("Apply").get("/envelopes").store({ results: "data" }).refreshAll().end()
+        .action("Prev").local().adjust("offset", "-{{limit}}", 0).refreshAll().end()
+        .action("Next").local().adjust("offset", "{{limit}}").refreshAll().end()
+        .end()
+      .section("Envelopes")
+        .listFrom("results.items")
+        .list("{{name}} · ${{amount}}")
+        .meta("total={{total}}, limit={{limit}}, offset={{offset}}", "results")
+        .rowField("amount", { type: "number", value: 25, placeholder: "amount" })
+        .rowAction("Allocate").post("/envelopes/{{id}}/allocate").end()
+        .rowAction("Spend").post("/envelopes/{{id}}/spend").end()
+        .end()
+      .section("Get / Update / Delete by Name")
+        .fields({
+          name: { placeholder: "current name" },
+          new_name: { placeholder: "new name" }
+        })
+        .query({ name: "{{name}}" })
+        .action("Get").get("/envelopes/by-name").refreshAll().end()
+        .action("Update").put("/envelopes/by-name").refreshAll().end()
+        .action("Delete").del("/envelopes/by-name").refreshAll().end()
+        .end()
+      .mount();
+  </script>
+</body>
+</html>

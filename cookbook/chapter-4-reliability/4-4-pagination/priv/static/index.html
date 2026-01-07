@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>4.4 Pagination + Filtering</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body>
+    <div id="app"></div>
+
+    <script type="module">
+      import ui from "/ui.js";
+
+      ui.app("Pagination + Filtering")
+        .blurb("Search items with q/limit/offset and page through results.")
+        .group("Query + Results")
+          .grid(2, 12)
+          .section("Query")
+            .noOutput()
+            .fields({
+              q: { placeholder: "Item" },
+              limit: { type: "number", value: 10 },
+              offset: { type: "number", value: 0 },
+              order: { value: "asc" }
+            })
+            .query({ q: "{{q}}", limit: "{{limit}}", offset: "{{offset}}", order: "{{order}}" })
+            .action("Search")
+              .get("/items")
+              .store({ results: "data" })
+              .refreshAll()
+              .end()
+            .action("Prev")
+              .adjust("offset", "-{{limit}}", 0)
+              .get("/items")
+              .store({ results: "data" })
+              .refreshAll()
+              .end()
+            .action("Next")
+              .adjust("offset", "{{limit}}")
+              .get("/items")
+              .store({ results: "data" })
+              .refreshAll()
+              .end()
+            .end()
+          .section("Results")
+            .sticky({ top: 16 })
+            .listFrom("results.items")
+            .list("#{{id}} {{name}}")
+            .meta("total {{total}} · limit {{limit}} · offset {{offset}} · order {{order}}", "results")
+            .end()
+          .end();
+    </script>
+  </body>
+</html>

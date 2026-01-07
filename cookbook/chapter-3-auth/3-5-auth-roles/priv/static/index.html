@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Auth Roles</title>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import ui from "/ui.js";
+
+    ui.app("3.5 Roles (admin/user)")
+      .blurb("Admin and user accounts see different endpoints. Try: admin/admin123 or user/user123.")
+      .section("Auth")
+        .action("Login").post("/auth/login").creds().fields({
+          user: "user",
+          pass: { type: "password", value: "user123" }
+        }).end()
+        .action("/me").get("/me").creds().end()
+        .action("/user").get("/user").creds().end()
+        .action("/admin").get("/admin").creds().end()
+        .end()
+      .mount();
+  </script>
+</body>
+</html>

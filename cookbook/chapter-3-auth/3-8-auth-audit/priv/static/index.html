@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Auth Audit</title>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import ui from "/ui.js";
+
+    ui.app("3.8 Auth Audit Logs")
+      .blurb("Login attempts are recorded in an in-memory audit log. Try: admin / admin123.")
+      .section("Auth")
+        .action("Login")
+          .post("/auth/login")
+          .fields({ user: "admin", pass: { type: "password", value: "admin123" } })
+          .end()
+        .action("Get /audit")
+          .get("/audit")
+          .end()
+        .end()
+      .mount();
+  </script>
+</body>
+</html>

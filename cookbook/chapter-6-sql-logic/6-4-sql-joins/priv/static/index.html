@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>6.4 Joins</title>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import ui from "/ui.js";
+
+    ui.app("Joins (1:N + M:N)")
+      .blurb("Authors → Books, plus tags per book. Seed data is included to make joins visible immediately.")
+      .section("Authors")
+        .action("Add author")
+          .post("/authors")
+          .field("name", "Ada")
+          .refreshAll()
+          .end()
+        .read("/authors")
+        .store({ authors: "data" })
+        .list("{{id}} {{name}}")
+        .end()
+      .section("Books")
+        .fields({
+          author_id: { type: "select", optionsFrom: "authors", optionLabel: "{{id}} {{name}}", optionValue: "id" },
+          title: { value: "Algorithms" }
+        })
+        .action("Add book")
+          .post("/books")
+          .refreshAll()
+          .end()
+        .read("/books")
+        .store({ books: "data" })
+        .list("{{id}} {{title}} ({{author}})")
+        .end()
+      .section("Attach Tag")
+        .fields({
+          book_id: { type: "select", optionsFrom: "books", optionLabel: "{{id}} {{title}}", optionValue: "id" },
+          tag: { placeholder: "tag name", value: "classic" }
+        })
+        .action("Add tag")
+          .post("/books/{{book_id}}/tags")
+          .refreshAll()
+          .end()
+        .read("/books_with_tags")
+        .store({ booksTags: "data" })
+        .list("{{id}} {{title}} ({{author}}) tags=[{{tags}}]")
+        .end()
+      .section("Tags")
+        .read("/tags")
+        .store({ tags: "data" })
+        .list("{{name}}")
+        .end()
+      .section("Search (joins in action)")
+        .fields({
+          q: { placeholder: "title contains", value: "Algo" },
+          author: { type: "select", optionsFrom: "authors", optionLabel: "{{name}}", optionValue: "name" },
+          tag: { type: "select", optionsFrom: "tags", optionLabel: "{{name}}", optionValue: "name" }
+        })
+        .query({ q: "{{q}}", author: "{{author}}", tag: "{{tag}}" })
+        .action("Search")
+          .get("/search")
+          .store({ searchResults: "data" })
+          .refreshAll()
+          .end()
+        .action("Demo search")
+          .local()
+          .set({ q: "Algo", author: "Ada", tag: "classic" })
+          .refreshAll()
+          .end()
+        .end()
+      .section("Search Results")
+        .listFrom("searchResults")
+        .list("{{id}} {{title}} ({{author}}) tags=[{{tags}}]")
+        .end()
+      .mount();
+  </script>
+</body>
+</html>

@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Org Chart Hierarchy</title>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import ui from "/ui.js";
+
+    ui.app("Recursive Org Chart")
+      .blurb("Visualizing company hierarchy using SQL Recursive CTEs and custom SVG rendering.")
+      .section("Add Employee")
+        .read("/employees")
+        .action("Hire").post("/employees")
+          .field("name", "New Hire")
+          .field("role", "Developer")
+          .field("manager_id", { type: "select", optionsFrom: "data", optionValue: "id", optionLabel: "{{name}} ({{role}})" })
+          .refreshAll()
+          .end()
+        .end()
+      .section("Visual Hierarchy")
+        .id("hierarchy")
+        .read("/employees/tree")
+        .customView(({ data }) => {
+          return `<div class="overflow-auto bg-slate-50 rounded-lg p-4">
+            <svg id="org-svg" width="800" height="400" class="mx-auto"></svg>
+          </div>`;
+        })
+        .onRender(({ data, element }) => {
+          if (!data || data.length === 0) return;
+          const svg = element.querySelector('#org-svg');
+          svg.innerHTML = '';
+
+          // Build tree structure
+          const nodes = {};
+          data.forEach(emp => {
+            nodes[emp.id] = { ...emp, children: [] };
+          });
+
+          let root = null;
+          data.forEach(emp => {
+            if (emp.manager_id && nodes[emp.manager_id]) {
+              nodes[emp.manager_id].children.push(nodes[emp.id]);
+            } else if (!emp.manager_id) {
+              root = nodes[emp.id];
+            }
+          });
+
+          const drawNode = (node, x, y, stepX) => {
+            // Draw circle
+            const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            circle.setAttribute("cx", x);
+            circle.setAttribute("cy", y);
+            circle.setAttribute("r", "20");
+            circle.setAttribute("fill", "#2e6f6a");
+            svg.appendChild(circle);
+
+            // Draw text
+            const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            text.setAttribute("x", x);
+            text.setAttribute("y", y + 35);
+            text.setAttribute("text-anchor", "middle");
+            text.setAttribute("font-size", "10");
+            text.setAttribute("class", "font-bold fill-slate-700");
+            text.textContent = `${node.name} (${node.role})`;
+            svg.appendChild(text);
+
+            if (node.children.length > 0) {
+              const nextStepX = stepX / node.children.length;
+              let startX = x - (stepX / 2) + (nextStepX / 2);
+
+              node.children.forEach((child, i) => {
+                const childX = startX + (i * nextStepX);
+                const childY = y + 80;
+
+                // Draw connecting line
+                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                line.setAttribute("x1", x);
+                line.setAttribute("y1", y + 20);
+                line.setAttribute("x2", childX);
+                line.setAttribute("y2", childY - 20);
+                line.setAttribute("stroke", "#cbd5e1");
+                line.setAttribute("stroke-width", "2");
+                svg.appendChild(line);
+
+                drawNode(child, childX, childY, nextStepX);
+              });
+            }
+          };
+
+          if (root) drawNode(root, 400, 40, 600);
+        })
+        .end()
+      .mount();
+  </script>
+</body>
+</html>

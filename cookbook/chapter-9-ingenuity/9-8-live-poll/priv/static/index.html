@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Live Poll</title>
+  <style>
+    .vote-bar {
+      transition: width 0.5s ease-out;
+    }
+    .vote-btn:hover {
+      transform: scale(1.02);
+    }
+    .vote-btn:active {
+      transform: scale(0.98);
+    }
+    @keyframes pulse-vote {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+    .voting { animation: pulse-vote 0.3s ease-in-out; }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import ui from "/ui.js";
+
+    ui.app("Live Poll")
+      .blurb("Real-time voting and polling system with animated results.")
+      .section("Create New Poll")
+        .action("Create Poll").post("/polls")
+          .field("question", "What's your favorite framework?")
+          .field("options", "React, Vue, Svelte, Angular")
+          .refreshAll()
+          .end()
+        .end()
+      .section("Active Poll")
+        .id("poll")
+        .read("/polls/1")
+        .mock(() => ({
+          id: 1,
+          question: "What is your favorite programming language?",
+          total_votes: 165,
+          options: [
+            { id: 1, option_text: "Elixir", votes: 42, percentage: 25.5 },
+            { id: 2, option_text: "Python", votes: 38, percentage: 23.0 },
+            { id: 3, option_text: "JavaScript", votes: 35, percentage: 21.2 },
+            { id: 4, option_text: "Rust", votes: 28, percentage: 17.0 },
+            { id: 5, option_text: "Go", votes: 22, percentage: 13.3 }
+          ]
+        }))
+        .customView(({ data }) => {
+          if (!data || !data.options) {
+            return `<div class="text-slate-500 text-center py-8">No active poll</div>`;
+          }
+
+          const colors = ['bg-emerald-500', 'bg-blue-500', 'bg-purple-500', 'bg-amber-500', 'bg-rose-500'];
+
+          return `
+            <div class="bg-white rounded-xl shadow-sm border p-6">
+              <h2 class="text-xl font-bold text-slate-800 mb-2">${data.question}</h2>
+              <p class="text-sm text-slate-500 mb-6">${data.total_votes} total votes</p>
+
+              <div class="space-y-4" id="poll-options">
+                ${data.options.map((opt, i) => `
+                  <div class="vote-option" data-option-id="${opt.id}">
+                    <div class="flex justify-between items-center mb-1">
+                      <span class="font-medium text-slate-700">${opt.option_text}</span>
+                      <span class="text-sm text-slate-500">${opt.votes} votes (${opt.percentage || 0}%)</span>
+                    </div>
+                    <div class="relative h-10 bg-slate-100 rounded-lg overflow-hidden cursor-pointer vote-btn transition-transform"
+                         onclick="window.castVote(${opt.id})">
+                      <div class="vote-bar absolute inset-y-0 left-0 ${colors[i % colors.length]} opacity-80"
+                           style="width: ${opt.percentage || 0}%"></div>
+                      <div class="absolute inset-0 flex items-center justify-center text-sm font-medium
+                                  ${(opt.percentage || 0) > 50 ? 'text-white' : 'text-slate-600'}">
+                        Click to vote
+                      </div>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+
+              <div class="mt-6 pt-4 border-t flex justify-between items-center">
+                <span class="text-xs text-slate-400">Poll #${data.id}</span>
+                <button onclick="window.refreshPoll()" class="text-sm text-emerald-600 hover:text-emerald-700 font-medium">
+                  ↻ Refresh Results
+                </button>
+              </div>
+            </div>
+          `;
+        })
+        .onRender(({ data, element }) => {
+          // Set up voting function
+          window.castVote = async (optionId) => {
+            const btn = element.querySelector(`[data-option-id="${optionId}"] .vote-btn`);
+            if (btn) btn.classList.add('voting');
+
+            try {
+              await fetch(`/vote/${optionId}`, { method: 'POST' });
+              // Trigger refresh
+              window.dispatchEvent(new CustomEvent('ui-refresh', { detail: { id: 'poll' } }));
+            } catch (e) {
+              console.error('Vote failed:', e);
+            }
+          };
+
+          window.refreshPoll = () => {
+            window.dispatchEvent(new CustomEvent('ui-refresh', { detail: { id: 'poll' } }));
+          };
+
+          // Auto-refresh every 5 seconds
+          if (!window.pollInterval) {
+            window.pollInterval = setInterval(() => {
+              window.dispatchEvent(new CustomEvent('ui-refresh', { detail: { id: 'poll' } }));
+            }, 5000);
+          }
+        })
+        .end()
+      .section("All Polls")
+        .read("/polls")
+        .mock(() => [
+          { id: 1, question: "What is your favorite programming language?", active: 1 },
+          { id: 2, question: "Best code editor?", active: 1 }
+        ])
+        .template("table")
+        .end()
+      .mount();
+  </script>
+</body>
+</html>

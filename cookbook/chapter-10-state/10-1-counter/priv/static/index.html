@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Counter - Client State</title>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import ui from "/ui.js";
+
+    ui.app("10.1 Counter")
+      .blurb("Simple counter with increment/decrement. Pure client-side state using .local(), .set(), and .adjust().")
+
+      .section("Counter Display")
+        .query({ count: 0 })
+        .storeView("count", "<div class='text-6xl font-bold text-center py-8'>{{count}}</div>")
+        .end()
+
+      .section("Controls")
+        .action("+1")
+          .local()
+          .adjust("count", 1)
+          .refreshAll()
+          .end()
+        .action("-1")
+          .local()
+          .adjust("count", -1)
+          .refreshAll()
+          .end()
+        .action("+10")
+          .local()
+          .adjust("count", 10)
+          .refreshAll()
+          .end()
+        .action("-10")
+          .local()
+          .adjust("count", -10)
+          .refreshAll()
+          .end()
+        .action("Reset")
+          .local()
+          .set({ count: 0 })
+          .refreshAll()
+          .end()
+        .end()
+
+      .section("Set Custom Value")
+        .action("Set")
+          .local()
+          .fields({ value: { type: "number", value: 100, placeholder: "Enter value" } })
+          .set({ count: "{{value}}" })
+          .refreshAll()
+          .end()
+        .end()
+
+      .mount();
+  </script>
+</body>
+</html>

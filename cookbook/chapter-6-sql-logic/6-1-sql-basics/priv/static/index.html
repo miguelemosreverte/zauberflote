@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>6.1 SQL Basics</title>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import ui from "/ui.js";
+
+    ui.app("SQL Basics")
+      .blurb("CRUD with constraints + index.")
+      .section("Create item")
+        .action("Create")
+          .post("/items")
+          .fields({ name: "Notebook", price: { type: "number", value: 12.5 } })
+          .refreshAll()
+          .end()
+        .action("Load").get("/items").refreshAll().end()
+        .end()
+      .section("Items")
+        .read("/items")
+        .kpis([
+          { label: "Items", compute: (data) => Array.isArray(data) ? data.length : 0 },
+          { label: "Avg Price", compute: (data) => {
+            const rows = Array.isArray(data) ? data : [];
+            if (rows.length === 0) return 0;
+            const total = rows.reduce((sum, row) => sum + Number(row.price || 0), 0);
+            return (total / rows.length).toFixed(2);
+          }},
+          { label: "Total", compute: (data) => {
+            const rows = Array.isArray(data) ? data : [];
+            const total = rows.reduce((sum, row) => sum + Number(row.price || 0), 0);
+            return total.toFixed(2);
+          }}
+        ])
+        .list("{{id}} {{name}} ${{price}}")
+        .end()
+      .mount();
+  </script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>5.2 WebSocket Client</title>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import ui from "/ui.js";
+
+    ui.app("WebSocket Client")
+      .blurb("Connect to the aux service WebSocket and keep a short chat log.")
+      .section("Aux connection")
+        .websocket({
+          url: "ws://localhost:4399/ws",
+          message: "hello aux",
+          autoConnect: true
+        })
+        .end()
+      .mount();
+  </script>
+</body>
+</html>

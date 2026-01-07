@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Filters - Client State</title>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import ui from "/ui.js";
+
+    const products = [
+      { id: 1, name: "Laptop Pro", category: "Electronics", price: 1299, stock: 15 },
+      { id: 2, name: "Wireless Mouse", category: "Electronics", price: 49, stock: 50 },
+      { id: 3, name: "Office Chair", category: "Furniture", price: 299, stock: 8 },
+      { id: 4, name: "Standing Desk", category: "Furniture", price: 599, stock: 12 },
+      { id: 5, name: "Monitor 27\"", category: "Electronics", price: 399, stock: 25 },
+      { id: 6, name: "Desk Lamp", category: "Furniture", price: 79, stock: 30 },
+      { id: 7, name: "Keyboard", category: "Electronics", price: 129, stock: 40 },
+      { id: 8, name: "Webcam HD", category: "Electronics", price: 89, stock: 22 },
+      { id: 9, name: "Filing Cabinet", category: "Furniture", price: 199, stock: 5 },
+      { id: 10, name: "USB Hub", category: "Electronics", price: 35, stock: 60 }
+    ];
+
+    ui.app("10.6 Client-Side Filters")
+      .blurb("Filter and sort data entirely on the client. No backend calls needed.")
+
+      .section("Product Catalog")
+        .id("catalog")
+        .query({ search: "", category: "all", sortBy: "name", sortDir: "asc", products: products })
+        .customView(({ store }) => {
+          // Ensure all store variables have proper defaults
+          const searchTerm = store.search ?? "";
+          const category = store.category ?? "all";
+          const sortBy = store.sortBy ?? "name";
+          const sortDir = store.sortDir ?? "asc";
+          const productList = store.products ?? products;
+
+          // Filter products
+          let filtered = productList.filter(p => {
+            const matchSearch = !searchTerm || p.name.toLowerCase().includes(searchTerm.toLowerCase());
+            const matchCategory = category === "all" || p.category === category;
+            return matchSearch && matchCategory;
+          });
+
+          // Sort products
+          filtered.sort((a, b) => {
+            const key = sortBy;
+            const dir = sortDir === "asc" ? 1 : -1;
+            if (typeof a[key] === 'string') return dir * a[key].localeCompare(b[key]);
+            return dir * (a[key] - b[key]);
+          });
+
+          // Calculate stats
+          const totalValue = filtered.reduce((sum, p) => sum + p.price * p.stock, 0);
+
+          return `
+            <div class="space-y-4">
+              <!-- Filters -->
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-3 p-4 bg-slate-50 rounded-lg">
+                <div>
+                  <label class="block text-xs font-medium text-slate-500 mb-1">Search</label>
+                  <input type="text" name="search" value="${searchTerm}" placeholder="Search..."
+                    class="filter-input w-full px-3 py-2 border border-slate-200 rounded-md text-sm" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-slate-500 mb-1">Category</label>
+                  <select name="category" class="filter-input w-full px-3 py-2 border border-slate-200 rounded-md text-sm">
+                    <option value="all" ${category === 'all' ? 'selected' : ''}>All Categories</option>
+                    <option value="Electronics" ${category === 'Electronics' ? 'selected' : ''}>Electronics</option>
+                    <option value="Furniture" ${category === 'Furniture' ? 'selected' : ''}>Furniture</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-slate-500 mb-1">Sort By</label>
+                  <select name="sortBy" class="filter-input w-full px-3 py-2 border border-slate-200 rounded-md text-sm">
+                    <option value="name" ${sortBy === 'name' ? 'selected' : ''}>Name</option>
+                    <option value="price" ${sortBy === 'price' ? 'selected' : ''}>Price</option>
+                    <option value="stock" ${sortBy === 'stock' ? 'selected' : ''}>Stock</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-slate-500 mb-1">Direction</label>
+                  <select name="sortDir" class="filter-input w-full px-3 py-2 border border-slate-200 rounded-md text-sm">
+                    <option value="asc" ${sortDir === 'asc' ? 'selected' : ''}>↑ Ascending</option>
+                    <option value="desc" ${sortDir === 'desc' ? 'selected' : ''}>↓ Descending</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Stats -->
+              <div class="flex gap-4 text-sm">
+                <div class="px-3 py-1 bg-blue-50 text-blue-700 rounded-full">
+                  Showing: <strong>${filtered.length}</strong> / ${productList.length}
+                </div>
+                <div class="px-3 py-1 bg-green-50 text-green-700 rounded-full">
+                  Total Value: <strong>$${totalValue.toLocaleString()}</strong>
+                </div>
+              </div>
+
+              <!-- Results Table -->
+              ${filtered.length === 0
+                ? '<div class="text-slate-500 text-center py-8">No products match your filters</div>'
+                : `<table class="w-full text-sm">
+                    <thead>
+                      <tr class="border-b-2 border-slate-200">
+                        <th class="text-left py-3 font-semibold">Name</th>
+                        <th class="text-left py-3 font-semibold">Category</th>
+                        <th class="text-right py-3 font-semibold">Price</th>
+                        <th class="text-right py-3 font-semibold">Stock</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${filtered.map(p => `
+                        <tr class="border-b border-slate-100 hover:bg-slate-50">
+                          <td class="py-2 font-medium">${p.name}</td>
+                          <td class="py-2 text-slate-500">${p.category}</td>
+                          <td class="py-2 text-right">$${p.price}</td>
+                          <td class="py-2 text-right ${p.stock < 10 ? 'text-red-500 font-medium' : ''}">${p.stock}</td>
+                        </tr>
+                      `).join('')}
+                    </tbody>
+                  </table>`
+              }
+            </div>
+          `;
+        })
+        .onRender(({ store, element }) => {
+          element.querySelectorAll('.filter-input').forEach(input => {
+            input.addEventListener('input', () => {
+              const searchInput = element.querySelector('input[name="search"]');
+              const hadFocus = document.activeElement === searchInput;
+              const selectionStart = searchInput?.selectionStart;
+              const selectionEnd = searchInput?.selectionEnd;
+
+              store[input.name] = input.value;
+              window.dispatchEvent(new CustomEvent('ui:refresh:catalog'));
+
+              // Restore focus after DOM update
+              if (hadFocus) {
+                requestAnimationFrame(() => {
+                  const newSearchInput = element.querySelector('input[name="search"]');
+                  if (newSearchInput) {
+                    newSearchInput.focus();
+                    // Restore cursor position
+                    if (selectionStart !== null && selectionEnd !== null) {
+                      newSearchInput.setSelectionRange(selectionStart, selectionEnd);
+                    }
+                  }
+                });
+              }
+            });
+            input.addEventListener('change', () => {
+              store[input.name] = input.value;
+              window.dispatchEvent(new CustomEvent('ui:refresh:catalog'));
+            });
+          });
+        })
+        .end()
+
+      .mount();
+  </script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>6.5.2 Workflow</title>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import ui from "/ui.js";
+
+    ui.app("6.5.2 Multi-step Workflow")
+      .blurb("Order transitions: created → paid → shipped.")
+      .section("Create order")
+        .action("Create")
+          .post("/orders")
+          .fields({ item: "Book" })
+          .refreshAll()
+          .end()
+        .end()
+      .section("Orders")
+        .read("/orders")
+        .store({ orders: "data" })
+        .list("#{{id}} {{item}} [{{status}}]")
+        .rowAction("Pay")
+          .post("/orders/{{id}}/pay")
+          .end()
+        .rowAction("Ship")
+          .post("/orders/{{id}}/ship")
+          .end()
+        .end()
+      .mount();
+  </script>
+</body>
+</html>

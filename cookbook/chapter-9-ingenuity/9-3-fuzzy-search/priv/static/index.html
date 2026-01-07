@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Fuzzy Search Engine</title>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import ui from "/ui.js";
+
+    ui.app("Fuzzy Search Engine")
+      .blurb("High-performance full-text search powered by SQLite FTS5.")
+      .section("Search Documents")
+        .id("search-box")
+        .query({ q: "" })
+        .fields({
+          q: { placeholder: "Search title or content...", value: "" }
+        })
+        .onRender(({ element, store }) => {
+           // Live search: update store and trigger refresh on input
+           const input = element.querySelector('input[name="q"]');
+           input.addEventListener('input', (e) => {
+             store.q = e.target.value;
+             window.dispatchEvent(new CustomEvent('ui:refresh:results-list'));
+           });
+        })
+        .end()
+      .section("Results List")
+        .id("results-list")
+        .read("/search")
+        .query({ q: "{{q}}" })
+        .list("<strong>{{title}}</strong><br/><span class='text-xs text-slate-500'>{{content}}</span>")
+        .end()
+      .mount();
+  </script>
+</body>
+</html>

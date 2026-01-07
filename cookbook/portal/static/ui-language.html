@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Chapter 0 - UI Language</title>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import ui from "http://localhost:1990/ui.js";
+
+    async function start() {
+      const res = await fetch("/ui_language.md");
+      const text = await res.text();
+
+      ui.app("Chapter 0 - UI Builder Language")
+        .blurb("A small, opinionated DSL for fast UI authoring during interviews.")
+        .section("UI Builder Language")
+          .markdown(text)
+          .end()
+        .mount();
+    }
+
+    start();
+  </script>
+</body>
+</html>

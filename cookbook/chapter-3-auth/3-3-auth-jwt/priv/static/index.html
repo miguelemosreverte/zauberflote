@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Auth JWT</title>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import ui from "/ui.js";
+
+    ui.app("3.3 JWT Auth")
+      .blurb("Login to receive a JWT, then call protected routes. Try: admin / admin123.")
+      .section("Login")
+        .action("Login")
+          .post("/auth/login")
+          .fields({ user: "admin", pass: { type: "password", value: "admin123" } })
+          .store({ token: "data.token" })
+          .refreshAll()
+          .end()
+        .end()
+      .section("Token")
+        .storeView("token", "token: {{token}}")
+        .end()
+      .section("Protected")
+        .action("Call /protected")
+          .get("/protected")
+          .bearer("token")
+          .end()
+        .end()
+      .mount();
+  </script>
+</body>
+</html>

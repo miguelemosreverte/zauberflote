@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>6.5.4 Policy Checks</title>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import ui from "/ui.js";
+
+    ui.app("6.5.4 Policy Checks")
+      .blurb("High amounts require admin approval.")
+      .section("Request")
+        .action("Create request")
+          .post("/requests")
+          .fields({ amount: { type: "number", value: 120 } })
+          .refreshAll()
+          .end()
+        .end()
+      .section("Requests")
+        .read("/requests")
+        .list("{{id}} ${{amount}} [{{status}}]")
+        .rowField("role", { type: "select", value: "{{lastRole}}", options: ["admin", "user"] })
+        .rowAction("Approve")
+          .post("/requests/{{id}}/approve")
+          .headers({ "X-Role": "{{role}}" })
+          .set({ lastRole: "{{role}}" })
+          .end()
+        .end()
+      .mount();
+  </script>
+</body>
+</html>

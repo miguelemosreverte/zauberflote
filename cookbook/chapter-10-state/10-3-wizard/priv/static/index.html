@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Wizard - Client State</title>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import ui from "/ui.js";
+
+    ui.app("10.3 Multi-Step Wizard")
+      .blurb("Form wizard with step navigation. Data persists across steps using client-side store.")
+
+      .section("Registration Wizard")
+        .id("wizard")
+        .query({ step: 1, name: "", email: "", plan: "basic", agree: false, submitted: false })
+        .customView(({ store }) => {
+          const steps = ["Personal", "Plan", "Review"];
+
+          // Ensure step has a default value
+          const currentStep = store.step ?? 1;
+
+          // Progress bar
+          const progressHtml = `
+            <div class="flex gap-2 mb-6">
+              ${steps.map((s, i) => `
+                <div class="flex-1 text-center py-2 rounded font-medium ${currentStep === i + 1 ? 'bg-slate-900 text-white' : currentStep > i + 1 ? 'bg-green-100 text-green-700' : 'bg-slate-200'}">
+                  ${currentStep > i + 1 ? '✓' : i + 1}. ${s}
+                </div>
+              `).join('')}
+            </div>
+          `;
+
+          // Submitted state
+          if (store.submitted) {
+            return `
+              ${progressHtml}
+              <div class="text-center py-8">
+                <div class="text-5xl mb-4">🎉</div>
+                <div class="text-2xl font-bold text-green-600 mb-2">Registration Complete!</div>
+                <div class="text-slate-600 mb-4">Thank you, ${store.name}!</div>
+                <div class="bg-slate-50 p-4 rounded inline-block text-left">
+                  <div class="text-sm text-slate-500">Your plan</div>
+                  <div class="font-bold capitalize">${store.plan}</div>
+                </div>
+                <div class="mt-6">
+                  <button class="restart-btn px-4 py-2 bg-slate-200 rounded hover:bg-slate-300">Start Over</button>
+                </div>
+              </div>
+            `;
+          }
+
+          // Step 1: Personal Info
+          if (currentStep === 1) {
+            return `
+              ${progressHtml}
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium mb-1">Name</label>
+                  <input type="text" name="name" value="${store.name || ''}" placeholder="Enter your name"
+                    class="wizard-input w-full rounded border border-slate-300 px-3 py-2" />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium mb-1">Email</label>
+                  <input type="email" name="email" value="${store.email || ''}" placeholder="Enter your email"
+                    class="wizard-input w-full rounded border border-slate-300 px-3 py-2" />
+                </div>
+                <div class="flex justify-end pt-4">
+                  <button class="next-btn px-4 py-2 bg-slate-900 text-white rounded hover:bg-slate-700">
+                    Next →
+                  </button>
+                </div>
+              </div>
+            `;
+          }
+
+          // Step 2: Select Plan
+          if (currentStep === 2) {
+            return `
+              ${progressHtml}
+              <div class="space-y-3">
+                ${[
+                  { id: 'basic', name: 'Basic', price: '$9/mo', desc: 'For individuals' },
+                  { id: 'pro', name: 'Pro', price: '$29/mo', desc: 'For professionals' },
+                  { id: 'enterprise', name: 'Enterprise', price: '$99/mo', desc: 'For teams' }
+                ].map(plan => `
+                  <label class="flex items-center gap-3 p-4 rounded border cursor-pointer hover:bg-slate-50 ${store.plan === plan.id ? 'border-slate-900 bg-slate-50' : 'border-slate-200'}">
+                    <input type="radio" name="plan" value="${plan.id}" ${store.plan === plan.id ? 'checked' : ''} class="plan-radio w-4 h-4" />
+                    <div class="flex-1">
+                      <span class="font-medium">${plan.name}</span>
+                      <span class="text-slate-500 text-sm ml-2">${plan.desc}</span>
+                    </div>
+                    <span class="font-semibold">${plan.price}</span>
+                  </label>
+                `).join('')}
+              </div>
+              <div class="flex justify-between pt-6">
+                <button class="back-btn px-4 py-2 bg-slate-200 rounded hover:bg-slate-300">
+                  ← Back
+                </button>
+                <button class="next-btn px-4 py-2 bg-slate-900 text-white rounded hover:bg-slate-700">
+                  Next →
+                </button>
+              </div>
+            `;
+          }
+
+          // Step 3: Review
+          if (currentStep === 3) {
+            return `
+              ${progressHtml}
+              <div class="space-y-4">
+                <div class="bg-slate-50 p-4 rounded">
+                  <h4 class="font-medium mb-3">Review your information</h4>
+                  <div class="grid grid-cols-2 gap-3 text-sm">
+                    <div class="text-slate-500">Name:</div>
+                    <div class="font-medium">${store.name || '(not provided)'}</div>
+                    <div class="text-slate-500">Email:</div>
+                    <div class="font-medium">${store.email || '(not provided)'}</div>
+                    <div class="text-slate-500">Plan:</div>
+                    <div class="font-medium capitalize">${store.plan}</div>
+                  </div>
+                </div>
+                <label class="flex items-center gap-2 p-3 border rounded cursor-pointer hover:bg-slate-50">
+                  <input type="checkbox" class="agree-checkbox w-4 h-4" ${store.agree ? 'checked' : ''} />
+                  <span class="text-sm">I agree to the terms and conditions</span>
+                </label>
+                <div id="wizard-error" class="text-red-500 text-sm hidden"></div>
+              </div>
+              <div class="flex justify-between pt-6">
+                <button class="back-btn px-4 py-2 bg-slate-200 rounded hover:bg-slate-300">
+                  ← Back
+                </button>
+                <button class="submit-btn px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+                  Submit ✓
+                </button>
+              </div>
+            `;
+          }
+
+          return progressHtml;
+        })
+        .onRender(({ store, element }) => {
+          // Text inputs
+          element.querySelectorAll('.wizard-input').forEach(input => {
+            input.addEventListener('input', (e) => {
+              store[e.target.name] = e.target.value;
+            });
+          });
+
+          // Plan radios
+          element.querySelectorAll('.plan-radio').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+              store.plan = e.target.value;
+              window.dispatchEvent(new CustomEvent('ui:refresh:wizard'));
+            });
+          });
+
+          // Agree checkbox
+          const agreeCheckbox = element.querySelector('.agree-checkbox');
+          if (agreeCheckbox) {
+            agreeCheckbox.addEventListener('change', (e) => {
+              store.agree = e.target.checked;
+            });
+          }
+
+          // Next button
+          const nextBtn = element.querySelector('.next-btn');
+          if (nextBtn) {
+            nextBtn.addEventListener('click', () => {
+              store.step = Math.min((store.step ?? 1) + 1, 3);
+              window.dispatchEvent(new CustomEvent('ui:refresh:wizard'));
+            });
+          }
+
+          // Back button
+          const backBtn = element.querySelector('.back-btn');
+          if (backBtn) {
+            backBtn.addEventListener('click', () => {
+              store.step = Math.max((store.step ?? 1) - 1, 1);
+              window.dispatchEvent(new CustomEvent('ui:refresh:wizard'));
+            });
+          }
+
+          // Submit button
+          const submitBtn = element.querySelector('.submit-btn');
+          if (submitBtn) {
+            submitBtn.addEventListener('click', () => {
+              const errorEl = element.querySelector('#wizard-error');
+              if (!store.agree) {
+                if (errorEl) {
+                  errorEl.textContent = 'Please agree to the terms and conditions';
+                  errorEl.classList.remove('hidden');
+                }
+                return;
+              }
+              store.submitted = true;
+              window.dispatchEvent(new CustomEvent('ui:refresh:wizard'));
+            });
+          }
+
+          // Restart button
+          const restartBtn = element.querySelector('.restart-btn');
+          if (restartBtn) {
+            restartBtn.addEventListener('click', () => {
+              store.step = 1;
+              store.name = '';
+              store.email = '';
+              store.plan = 'basic';
+              store.agree = false;
+              store.submitted = false;
+              window.dispatchEvent(new CustomEvent('ui:refresh:wizard'));
+            });
+          }
+        })
+        .end()
+
+      .mount();
+  </script>
+</body>
+</html>

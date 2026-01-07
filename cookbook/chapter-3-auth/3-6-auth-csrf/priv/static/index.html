@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Auth CSRF</title>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import ui from "/ui.js";
+
+    ui.app("3.6 CSRF (cookie auth)")
+      .blurb("Login -> fetch CSRF -> call protected POST. Try: admin / admin123.")
+      .section("Session")
+        .action("Login")
+          .post("/auth/login")
+          .creds()
+          .fields({ user: "admin", pass: { type: "password", value: "admin123" } })
+          .refreshAll()
+          .end()
+        .action("Get CSRF")
+          .get("/csrf")
+          .creds()
+          .store({ token: "data.token" })
+          .refreshAll()
+          .end()
+        .end()
+      .section("Token")
+        .storeView("token", "csrf token: {{token}}")
+        .end()
+      .section("Protected POST")
+        .action("POST /protected")
+          .post("/protected")
+          .creds()
+          .headers({ "X-CSRF-Token": "{{token}}" })
+          .fields({ ping: true })
+          .end()
+        .end()
+      .mount();
+  </script>
+</body>
+</html>
